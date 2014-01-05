@@ -1,0 +1,122 @@
+[% WRAPPER head %]
+<style>
+  .groupname     { font-weight: bold; color: navy; font-size: 120% }
+  .TN_leaf       { display: block }
+  .actions       { float: right; text-align: right; background-color: LightCyan;
+                   margin-left: 1em; margin-top: 1em; padding-left: 0.5em }
+  .readonly      { background-color: lightgrey }
+  .where         { width: 4em; text-align: right;  }
+  .focused_label { border-bottom: 1px dashed blue }
+</style>
+
+<script>
+  var tn_tree;
+  function setup() {  
+    tn_tree = new GvaScript.TreeNavigator(
+       'TN_tree', 
+       {selectFirstNode: false, tabIndex: -1}
+    );
+    var form = new GvaScript.Form('update_form', {
+      datatree: [% data.init_form %]
+     });
+    form.register('textarea, input', 'focus', on_focus_input);
+    form.register('textarea, input', 'blur',  on_blur_input);
+  }
+
+  window.onload = setup;
+
+  function confirm_n_ary_update () {
+    return confirm('This action will simultaneously update all records '
+                  +'corresponding to the "where/and" criteria.'
+                  +"\nDo you really want to continue ?");
+  }
+
+  function on_focus_input(event) {
+    var label = get_label(event);
+    if (label)
+      label.addClassName('focused_label');
+
+    // deselect treeNavigator
+    tn_tree.select(undefined);
+  }
+    
+  function on_blur_input(event) {
+    var label = get_label(event);
+    if (label)
+      label.removeClassName('focused_label');
+  }
+
+  function get_label(event) {
+    var node = tn_tree.enclosingNode(event.element());
+    return node ? tn_tree.label(node) : undefined;
+  }
+    
+</script>
+
+[% END; # WRAPPER head %]
+
+[%# ---------- start body ---------- %]
+
+
+<div class="actions">
+  <a href="descr">describe</a> | 
+  <a href="search">search</a> this table
+</div>
+
+
+<h1>Update [% data.table %]</h1>
+
+
+
+<form action="update" method="POST" id='update_form' accept-charset='utf-8'
+   [% "onsubmit='return confirm_n_ary_update()'" IF ! data.where_pk %]>
+
+  <div id="TN_tree">
+    [% USE group_iter = iterator(data.colgroups) %]
+    [% FOREACH group IN group_iter %]
+    <div class="TN_node">
+      <span class="TN_label groupname">[% group.name %]</span>
+      <div class="TN_content">
+        [% FOREACH col IN group.columns;
+           SET col_name = col.COLUMN_NAME %]
+        <div class="TN_leaf">
+
+          <span class="TN_label colname" 
+                title="[% col.descr %]">[% col_name %]</span>
+
+          <span class="after_label">
+            [% IF data.where_pk.defined(col_name) %]
+              where <input name="where.[% col_name %]" size=10 readonly
+                           class="readonly" tabindex=-1>
+            [% ELSE %]
+              set   <input name="set.[% col_name %]" size=20
+                       [%~ IF !seen_autofocus; 
+                             " autofocus"; 
+                             seen_autofocus = 1; 
+                           END %]>
+              [% IF data.where_pk;
+                 # updating one single record, so we show current values.
+                 # TODO : should improve GvaScript.Form so that we can
+                 # replace this <input> by a mere <div>, and yet update
+                 # the content automatically at init() %]
+              (curr.<input name="curr.[% col_name %]" size=20 readonly
+                           class="readonly" tabindex=-1>)
+              [% ELSE;
+                 # updating several records, so we show the WHERE criteria %]
+                 <span class="where">[% group_iter.first && loop.first ? "where" : "and" %]</span>
+                    <input name="where.[% col_name %]" size=10>
+              [% END; # IF data.where_pk %]
+            [% END; # IF data.where_pk.defined(col_name) %]
+          </span>
+
+
+        </div>
+        [% END; # FOREACH col IN group.columns %]
+      </div>
+    </div>
+    [% END; # FOREACH group IN group_iter %]
+  </div>
+
+  <input type="submit">
+  <input type="reset">
+</form>

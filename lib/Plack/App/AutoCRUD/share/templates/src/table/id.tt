@@ -1,0 +1,50 @@
+[% WRAPPER head %]
+<style>
+  .record_num    { color: #a00; font-weight: bold; font-size: 120% }
+  .groupname     { font-weight: bold; color: navy; font-size: 110% }
+  .record        { border-top: 1px dashed gray }
+  .criteria      { font-size: 90% }
+  .val           { background-color: #efe }
+  .page_links    { font : 90% Arial black }
+  .check_record  { float: right}
+  .pk            { text-decoration: underline }
+  .message       { width: 60%; color: red; border: 1px solid red; 
+                   font-weight: bold; margin-top: 6px}
+  H1             { margin-bottom : 0}
+  H2             { margin-bottom : 0}
+  #TN_tree       { clear: right }
+</style>
+<script>
+  function setup() {  
+      new GvaScript.TreeNavigator('TN_tree');
+  }
+  window.onload = setup;
+</script>
+
+[% END; # WRAPPER head %]
+
+[%# ---------- start body ---------- %]
+
+<div class="actions">
+  [% SET table_url = dsbase _ "table/" _ data.table; %]
+  <a href="[% table_url %]/descr">describe</a> | 
+  <a href="[% table_url %]/search">search</a> this table
+  <br>
+  <br>
+  <a href="[% table_url %]/update?[% data.update_args %]">update</a> |
+  <a href="[% table_url %]/delete?[% data.delete_args %]">delete</a> |
+  <a href="[% table_url %]/insert?[% data.clone_args %]">clone</a> this record
+</div>
+
+<h1>Record from [% data.table %]</h1>
+
+[% IF data.message; # could be a message coming from the last update() %]
+<div class="message">[% data.message %]</div>
+[% END; # IF data.message %]
+
+
+<h2>Primary key [% data.pk_val %]</h2>
+
+<div id="TN_tree">
+      [% INCLUDE src/table/_record.tt row=data.row %]
+</div>
