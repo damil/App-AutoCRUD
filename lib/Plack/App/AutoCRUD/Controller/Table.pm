@@ -161,7 +161,7 @@ sub search {
 
   if ($context->req->method eq 'POST') {
     my $output = delete $req_data->{-output} || "";
-    my $cols   = [keys(delete $req_data->{col} || {})];
+    my $cols   = [keys %{delete $req_data->{col} || {}}];
     $req_data->{-columns} = join ",", @$cols;
     $self->redirect("list$output?" . $self->_query_string(%$req_data));
   }

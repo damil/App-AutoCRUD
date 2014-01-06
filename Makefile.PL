@@ -28,6 +28,11 @@ build_requires (
    'Test::More' => 0,
 );
 
+test_requires (
+  'DBD::SQLite'                    => 1.39, # for foreign key support
+);
+
+
 requires (
   'Alien::GvaScript'               => 1.43,
   'Carp'                           => 0,
@@ -43,7 +48,6 @@ requires (
   'HTTP::Date'                     => 0,
   'JSON'                           => 0,
   'List::MoreUtils'                => 0,
-  'Log::Dispatch'                  => 0,
   'Moose'                          => 0,
   'MooseX::NonMoose'               => 0,
   'MooseX::SemiAffordanceAccessor' => 0,

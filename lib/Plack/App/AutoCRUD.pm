@@ -18,7 +18,7 @@ use YAML::Any         qw/Dump/;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 has 'config'      => (is => 'bare', isa => 'HashRef', required => 1);
 has 'dir'         => (is => 'ro',   isa => 'Str',
