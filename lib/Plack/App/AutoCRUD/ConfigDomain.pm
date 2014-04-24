@@ -217,8 +217,8 @@ A hashref containing instructions for connecting to the database.
 The main key is C<connect>, which contains a list of arguments
 to L<DBI/connect>, i.e. a connection string, username, password,
 and possibly a hashref of additional options. Alternatively, C<connect>
-could also contain just a string of Perl code, which will be 
-C<eval>ed to get the connection.
+could also contain a coderef, or even just a string of Perl code, 
+which will be C<eval>ed to get the connection.
 
 Optional keys C<db_catalog> and C<db_schema> may specify the values to
 be passed to L<DBI/table_info>, L<DBI/column_info>, etc.  This will be

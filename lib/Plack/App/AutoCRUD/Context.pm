@@ -7,7 +7,7 @@ use warnings;
 use Moose;
 use MooseX::SemiAffordanceAccessor; # writer methods as "set_*"
 use Carp;
-use Scalar::Util qw/reftype/;
+use Scalar::Does qw/does/;
 use Encode       ();
 
 use namespace::clean -except => 'meta';
@@ -106,16 +106,14 @@ sub maybe_set_view_from_path {
 
 
 sub _decode_utf8 {
-  for (reftype $_[0]) {
-    when ('ARRAY') {
-      _decode_utf8($_) foreach @{$_[0]};
-    }
-    when ('HASH') {
-      _decode_utf8($_) foreach values %{$_[0]};
-    }
-    default {
-      $_[0] = Encode::decode_utf8($_[0], Encode::FB_CROAK);
-    }
+  if (does($_[0], 'ARRAY')) {
+    _decode_utf8($_) foreach @{$_[0]};
+  }
+  elsif (does($_[0], 'HASH')) {
+    _decode_utf8($_) foreach values %{$_[0]};
+  }
+  else {
+    $_[0] = Encode::decode_utf8($_[0], Encode::FB_CROAK);
   }
 }
 

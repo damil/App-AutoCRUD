@@ -8,6 +8,7 @@ use Carp;
 use DBI;
 use Clone           qw/clone/;
 use List::MoreUtils qw/part/;
+use Scalar::Does    qw/does/;
 use SQL::Abstract::FromQuery;
 
 use namespace::clean -except => 'meta';
@@ -27,35 +28,43 @@ has 'query_parser' => (is => 'ro', isa => 'SQL::Abstract::FromQuery',
 has 'tablegroups'  => (is => 'ro', isa => 'ArrayRef',
                        builder => '_tablegroups', lazy => 1);
 
-
 #======================================================================
 # ATTRIBUTE BUILDERS
 #======================================================================
 
 sub _dbh {
   my $self = shift;
-
-  # if we already have a DBIDM schema with a dbh, return that dbh
-  my $schema = $self->{schema}; # break encapsulation to avoid circular calls
-  return $schema->dbh if $schema && $schema->dbh;
-
-  # otherwise, open a new connection
   my $dbh;
-  my $connect_spec = $self->config(qw/dbh connect/)
-    or die "no entry DBI/connect in config";
-  if (ref $connect_spec) {
-    # config was an arrayref : connect through DBI using that list
-    $dbh = DBI->connect(@$connect_spec);
-  }
-  else {
-    # config was a scalar : treat it as a line of Perl code
-    local $@;
-    $dbh = eval $connect_spec
-      or die $@;
+
+  # create a connection from specifications found in config
+  if (my $connect_spec = $self->config(qw/dbh connect/)) {
+    if (does($connect_spec, 'ARRAY')) {
+      # regular DBI connect using the given list of arguments
+      $dbh = DBI->connect(@$connect_spec);
+    }
+    elsif (does($connect_spec, 'CODE')) {
+      $dbh = $connect_spec->();
+    }
+    elsif (does($connect_spec, '""')) {
+      # config was a string : treat it as a line of Perl code
+      local $@;
+      $dbh = eval $connect_spec
+        or die $@;
+    }
+    else {
+      die "can't connect to " . $self->name . " (wrong config/dbh info)";
+    }
   }
 
-  # connect schema to dbh
-  $schema->dbh($dbh) if $schema && !$schema->dbh;
+  # or recover existing connection in schema
+  elsif (my $schema = $self->{schema}) { # bypass encapsulation to avoid
+                                         # circular calls with ->_schema()
+    $dbh = $schema->dbh;
+  }
+
+  # report failure if no connection found
+  $dbh
+    or die "no DBI/connect information in config for " . $self->name;
 
   return $dbh;
 }
@@ -66,19 +75,16 @@ sub _schema {
   my $required_class = $self->config('require');
   my $schema_class   = $self->config('schema_class') || $required_class;
 
-  # if the class is already loaded, do nothing
-  return $schema_class if $schema_class 
-                       && $self->app->is_class_loaded($schema_class);
-
   # if external code is required, load it
-  if ($required_class) {
+  if ($required_class && 
+        !($schema_class && $self->app->is_class_loaded($schema_class))) {
     my $loaded_class = $self->app->try_load_class($required_class)
       or die "Can't locate $required_class";
     $schema_class = $self->config('schema_class') || $loaded_class;
   }
 
-  # otherwise, generate class from database metadata
-  else {
+  # generate class on the fly if needed
+  if (!$schema_class) {
     $schema_class = (ref $self) . "::_Auto_Schema::" . $self->name;
 
     if (! $self->app->is_class_loaded($schema_class)) {
@@ -91,10 +97,6 @@ sub _schema {
 
       # eval source code on the fly
       $generator->load();
-
-      # connect the schema
-      $schema_class->dbh($self->dbh);
-      return $schema_class;
     }
   }
 
@@ -113,13 +115,13 @@ sub _tablegroups {
   my ($self) = @_;
 
   # get table info from database
-  my $dbh        = $self->dbh;
-  my $sth        = $dbh->table_info($self->config(qw/dbh db_catalog/),
-                                    $self->config(qw/dbh db_schema/),
-                                    undef,
-                                    $self->config(qw/dbh db_type/) || 'TABLE',
-                                   );
-  my $tables     = $sth->fetchall_hashref('TABLE_NAME');
+  my $dbh    = $self->dbh;
+  my $sth    = $dbh->table_info($self->config(qw/dbh db_catalog/),
+                                $self->config(qw/dbh db_schema/),
+                                undef,
+                                $self->config(qw/dbh db_type/) || 'TABLE',
+                               );
+  my $tables = $sth->fetchall_hashref('TABLE_NAME');
 
   # merge with descriptions from config
   foreach my $table (keys %$tables) {
@@ -187,16 +189,17 @@ sub descr {
 sub prepare_for_request {
   my ($self, $req) = @_;
 
-  # here is a chance for example to re-authenticate
+  # if schema is in single-schema mode, make sure it is connected to
+  # the proper database
+  my $schema = $self->schema;
+  $schema->dbh($self->dbh) unless ref $schema;
 }
 
 
 sub primary_key {
   my ($self, $table) = @_;
 
-  my $meta_table = $self->schema->metadm->db_table($table)
-    or die "no such table: $table";
-  return $meta_table->primary_key;
+  return $self->_meta_table($table)->primary_key;
 }
 
 
@@ -208,9 +211,8 @@ sub colgroups {
   return $colgroups if $colgroups;
 
   # paths from this table
-  my $meta_table = $self->schema->metadm->db_table($table)
-    or die "no such table: $table";
-  my %paths      = $meta_table ? $meta_table->path : ();
+  my $meta_table = $self->_meta_table($table);
+  my %paths      = $meta_table->path;
 
   # primary_key
   my @pk = $meta_table->primary_key;
@@ -262,8 +264,6 @@ sub colgroups {
   my $sort_pk = sub {   $columns->{$a}{is_pk} ? -1
                       : $columns->{$b}{is_pk} ?  1
                       :                         $a cmp $b};
-
-
   if (my @other_cols = sort $sort_pk keys %$columns) {
     # build colgroup
     push @$colgroups, {name    => 'Unclassified columns', 
@@ -288,6 +288,17 @@ sub _columns_from_Oracle_synonym {
   my $sth = $dbh->column_info(undef, $owner, $table, undef);
   return $sth->fetchall_hashref('COLUMN_NAME')
 }
+
+
+
+sub _meta_table {
+  my ($self, $table) = @_;
+
+  my $meta_table = $self->schema->metadm->db_table($table)
+    or die "no table in schema corresponds to '$table'";
+  return $meta_table;
+}
+
 
 
 
@@ -327,8 +338,12 @@ for this specific datasource.
 
 L<DBI> database handle, which encapsulates the connection to the
 database.  The dbh is created on demand, from connection parameters or
-from a coderef specified in the configuration tree; alternatively, it
-can also be supplied from the calling program.
+from a coderef specified in the configuration tree (see
+L<Plack::App::AutoCRUD::ConfigDomain/dbh>); alternatively, it
+can also be supplied from the calling program, or grabbed from the
+schema. Once created, the dbh is readonly and cannot be changed (even
+if the schema itself was bound to another dbh by a remote module -- the
+dbh will be forced again before processing the HTTP request).
 
 
 =head2 schema
@@ -373,9 +388,11 @@ Returns the description string for this datasource, as specified in config.
 
   $datasource->prepare_for_request($req);
 
-Empty method, called from L<Plack::App::AutoCRUD/call> before serving
+Called from L<Plack::App::AutoCRUD/call> before serving
 a request. This is a hook for subclasses to provide application-specific
-behaviour if needed. The argument C<$req> is an instance of L<Plack::Request>.
+behaviour if needed (like for example resetting the database connection
+or supplying user credentials from the HTTP request).
+The argument C<$req> is an instance of L<Plack::Request>.
 
 =head2 primary_key
 

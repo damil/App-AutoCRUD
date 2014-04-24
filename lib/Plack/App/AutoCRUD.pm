@@ -11,12 +11,13 @@ extends 'Plack::Component';
 use Plack::Request;
 use Plack::Util;
 use Carp;
-use Scalar::Util      qw/reftype/;
+use Scalar::Does      qw/does/;
 use Clone             qw/clone/;
 use Try::Tiny;
 use YAML::Any         qw/Dump/;
 
 use namespace::clean -except => 'meta';
+
 
 our $VERSION = '0.02';
 
@@ -117,6 +118,20 @@ sub datasource {
 sub call { # request dispatcher (see L<Plack::Component>)
   my ($self, $env) = @_;
 
+  try {
+    $self->respond($env);
+  }
+    catch {
+      return [500, ['Content-type' => 'text/html'], [$self->show_error($_)]];
+    };
+}
+
+
+
+
+sub respond { # request dispatcher (see L<Plack::Component>)
+  my ($self, $env) = @_;
+
   my $controller_name;
 
   # build context object
@@ -153,11 +168,13 @@ sub call { # request dispatcher (see L<Plack::Component>)
   $controller->respond;
 }
 
+
 sub config {
   my $self = shift;
   my $config = $self->{config};
   return _node_from_path($config, @_);
 }
+
 
 sub find_class {
   my ($self, $name) = @_;
@@ -174,6 +191,8 @@ sub find_class {
 
 sub default {
   my ($self, @path) = @_;
+
+  # convenience function, returns default value from config (if any)
   return $self->config(default => @path);
 }
 
@@ -181,10 +200,14 @@ sub default {
 sub try_load_class {
   my ($self, $name, $namespace) = @_;
 
+  # return classname if loaded successfully;
+  # return undef if not found;
+  # raise exception if found but there is a compilation error
   my $class = try {Plack::Util::load_class($name, $namespace)}
               catch {die $_ if $_ !~ /^Can't locate(?! object method)/};
   return $class;
 }
+
 
 sub is_class_loaded {
   my ($self, $class) = @_;
@@ -199,10 +222,44 @@ sub is_class_loaded {
 }
 
 
+sub show_error {
+  my ($self, $msg) = @_;
+
+  return <<__EOHTML__;
+<!doctype html>
+<html>
+<head><title>500 Server Error</title></head>
+<body><h1>500 Server Error</h1>
+<pre>
+$msg
+</pre>
+
+<!--
+  512 bytes of padding to suppress Internet Explorer's "Friendly error messages"
+
+  From: HOW TO: Turn Off the Internet Explorer 5.x and 6.x 
+        "Show Friendly HTTP Error Messages" Feature on the Server Side"
+        http://support.microsoft.com/kb/294807
+
+  Several frequently-seen status codes have "friendly" error messages
+  that Internet Explorer 5.x displays and that effectively mask the
+  actual text message that the server sends.
+  However, these "friendly" error messages are only displayed if the
+  response that is sent to the client is less than or equal to a
+  specified threshold.
+  For example, to see the exact text of an HTTP 500 response,
+  the content length must be greater than 512 bytes.
+  -->
+</body>
+</html>
+__EOHTML__
+}
+
 
 #======================================================================
 # AUXILIARY FUNCTIONS
 #======================================================================
+
 
 # convenience function for walking through nested hashrefs/arrayrefs
 sub _node_from_path { 
@@ -212,8 +269,8 @@ sub _node_from_path {
   return undef                                   if !defined $path0 && @path;
   return $root                                   if !defined $path0;
   return undef                                   if !defined $root;
-  return _node_from_path($root->{$path0}, @path) if reftype $root eq 'HASH';
-  return _node_from_path($root->[$path0], @path) if reftype $root eq 'ARRAY';
+  return _node_from_path($root->{$path0}, @path) if does($root, 'HASH');
+  return _node_from_path($root->[$path0], @path) if does($root, 'ARRAY');
 
   # otherwise
   croak "_node_from_path: incorrect root/path";

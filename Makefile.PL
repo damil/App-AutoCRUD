@@ -53,6 +53,7 @@ requires (
   'MooseX::SemiAffordanceAccessor' => 0,
   'Path::Tiny'                     => 0,
   'Plack'                          => 0,
+  'Scalar::Does'                   => 0,
   'Scalar::Util'                   => 0,
   'SQL::Abstract::FromQuery'       => 0,
   'Template'                       => 0,
