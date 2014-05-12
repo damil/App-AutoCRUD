@@ -1,1 +1,0 @@
-# subclass of Plack::Request

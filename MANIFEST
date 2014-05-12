@@ -28,7 +28,6 @@ lib/Plack/App/AutoCRUD/Controller/Schema.pm
 lib/Plack/App/AutoCRUD/Controller/Static.pm
 lib/Plack/App/AutoCRUD/Controller/Table.pm
 lib/Plack/App/AutoCRUD/DataSource.pm
-lib/Plack/App/AutoCRUD/Request.pm
 lib/Plack/App/AutoCRUD/share/static/css/styles.css
 lib/Plack/App/AutoCRUD/share/templates/lib/config
 lib/Plack/App/AutoCRUD/share/templates/lib/site/footer
