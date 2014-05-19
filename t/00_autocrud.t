@@ -44,7 +44,7 @@ test_psgi $app, sub {
   like $res->content, qr/Chinook/,                   "Home contains Chinook datasource";
 
   # schema page
-  $res = $cb->(GET "/Chinook/schema");
+  $res = $cb->(GET "/Chinook/schema/tablegroups");
   like $res->content, qr/Artist/,                    "Artist listed";
   like $res->content, qr/Album/,                     "Album listed";
   like $res->content, qr/Track/,                     "Track listed";
