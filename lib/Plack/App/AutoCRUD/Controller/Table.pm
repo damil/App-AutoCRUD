@@ -316,7 +316,10 @@ sub _query_string {
   foreach my $key (sort keys %params) {
     my $val = $params{$key};
     length $val or next KEY;
-    s/=/%3D/g, s/\?/%26/g for $key, $val; # cheap URI escape
+
+    # cheap URI escape
+    s/=/%3D/g, s/&/%26/g, s/;/%3B/g, s/\+/%2B/g for $key, $val;
+
     push @fragments, "$key=$val";
   }
   return join "&", @fragments;

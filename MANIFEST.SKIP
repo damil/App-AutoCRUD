@@ -1,0 +1,27 @@
+# Avoid version control files.
+^\.git
+
+# Avoid Makemaker generated and utility files.
+\bMakefile$
+\bblib
+\bMakeMaker-\d
+\bpm_to_blib$
+\bblibdirs$
+^MANIFEST\.SKIP$
+
+# Downloaded databases do not belong to the dist
+\.sqlite$
+
+# Avoid old dists
+\.gz$
+
+
+# Avoid temp and backup files.
+~$
+\.tmp$
+\.old$
+\.bak$
+\#$
+\b\.#
+^MYMETA.yml$
+^MYMETA\.json$
