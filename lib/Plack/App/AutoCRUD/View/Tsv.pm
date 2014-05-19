@@ -6,6 +6,7 @@ use warnings;
 
 use Moose;
 extends 'Plack::App::AutoCRUD::View';
+use Encode qw/encode/;
 
 use namespace::clean -except => 'meta';
 
@@ -25,7 +26,8 @@ sub render {
                        map {join("\t", @{$_}{@headers})} @{$data->{rows}});
 
   # return Plack response
-  return [200, ['Content-type' => 'text/tab-separated-values'], [$str] ];
+  return [200, ['Content-type' => 'text/tab-separated-values; charset=utf-16'], 
+               [encode("utf16", $str)] ];
 }
 
 
@@ -34,5 +36,15 @@ sub render {
 
 __END__
 
+
+
+=head1 NAME
+
+Plack::App::AutoCRUD::View::Tsv - View for tab-separated values
+
+=head1 DESCRIPTION
+
+This view outputs data as a file with tab-separated values,
+encoded in UTF-16 so that Excel can read wide characters correctly.
 
 
