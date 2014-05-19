@@ -232,6 +232,10 @@ sub update {
       $data->{where_pk} = $where_pk;
       $req_data->{where} = $where_pk;
     };
+    if (my $noupd = delete $req_data->{_noupd}) {
+      # fields that should not be updatable
+      $data->{noupd}{$_} = 1 foreach split qr[/], $noupd;
+    }
     $data->{init_form} = $json_maker->encode($req_data);
 
     return $data;

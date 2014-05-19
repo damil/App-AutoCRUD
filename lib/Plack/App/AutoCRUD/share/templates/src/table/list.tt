@@ -84,10 +84,12 @@
       check/uncheck all records in page
         <input type=checkbox onpropertychange="propagate_checkbox(this)"> 
       <br>
-      <a href="update?" onclick="return add_checkboxes(this)">update</a> |
-      <a href="delete?" onclick="return add_checkboxes(this)">delete</a> checked records
+      <a href="update?_noupd=[% pk_name %]&" 
+         onclick="return add_checkboxes(this)">update</a> |
+      <a href="delete?" 
+         onclick="return add_checkboxes(this)">delete</a> checked records
       <br>
-      <a href="update?[% data.where_args %]">update</a> |
+      <a href="update?_noupd=[% pk_name %]&[% data.where_args %]">update</a> |
       <a href="delete?[% data.where_args %]">delete</a> whole result set
   [% END; # IF data.rows.size > 0 %]
   <br>

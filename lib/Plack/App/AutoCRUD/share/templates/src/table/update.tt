@@ -57,7 +57,6 @@
 
 [%# ---------- start body ---------- %]
 
-
 <div class="actions">
   <a href="descr">describe</a> | 
   <a href="search">search</a> this table
@@ -85,22 +84,27 @@
                 title="[% col.descr %]">[% col_name %]</span>
 
           <span class="after_label">
+            set <input name="set.[% col_name %]" size=20
+                   [%~ IF data.noupd.$col_name;
+                         " readonly class='readonly'";
+                       ELSIF !seen_autofocus; 
+                         " autofocus"; 
+                         seen_autofocus = 1; 
+                       END %]>
+
+
             [% IF data.where_pk.defined(col_name) %]
-              where <input name="where.[% col_name %]" size=10 readonly
-                           class="readonly" tabindex=-1>
+              <b>where</b> <input name="where.[% col_name %]" size=10 readonly
+                                  class="readonly" tabindex=-1>
             [% ELSE %]
-              set   <input name="set.[% col_name %]" size=20
-                       [%~ IF !seen_autofocus; 
-                             " autofocus"; 
-                             seen_autofocus = 1; 
-                           END %]>
+
               [% IF data.where_pk;
                  # updating one single record, so we show current values.
                  # TODO : should improve GvaScript.Form so that we can
                  # replace this <input> by a mere <div>, and yet update
                  # the content automatically at init() %]
-              (curr.<input name="curr.[% col_name %]" size=20 readonly
-                           class="readonly" tabindex=-1>)
+                (curr.<input name="curr.[% col_name %]" size=20 readonly
+                             class="readonly" tabindex=-1>)
               [% ELSE;
                  # updating several records, so we show the WHERE criteria %]
                  <span class="where">[% group_iter.first && loop.first ? "where" : "and" %]</span>
