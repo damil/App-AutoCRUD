@@ -110,7 +110,8 @@
 
 
 <h2>Page [% data.page_index %][% " of $data.page_count" IF data.page_count %]
-   (records [% data.offset %] - [% data.offset + data.rows.size - 1 %])</h2>
+   (records [% data.offset %] - [% data.offset + data.rows.size - 1 %]
+    [% " of $data.row_count" IF data.row_count %])</h2>
 
 
 [% IF data.rows.size > 0 %]

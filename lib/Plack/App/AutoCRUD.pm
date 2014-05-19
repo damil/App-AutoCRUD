@@ -135,9 +135,10 @@ sub respond { # request dispatcher (see L<Plack::Component>)
   my $controller_name;
 
   # build context object
-  my $req           = Plack::Request->new($env),
+  my $request_class = $self->find_class("Request") || 'Plack::Request';
+  my $req           = $request_class->new($env);
   my $context_class = $self->find_class("Context");
-  my $context       = $context_class->new(app  => $self, req  => $req);
+  my $context       = $context_class->new(app => $self, req  => $req);
 
   # see if a specific view was required in the URL
   $context->maybe_set_view_from_path;
@@ -310,8 +311,8 @@ Create a configuration file, for example in L<YAML> format, like this :
             # arguments that will be passed to DBI->connect(...)
             # for example :
           - dbi:SQLite:dbname=some_file
-          - user
-          - password
+          - "" # user
+          - "" # password
           - RaiseError    : 1
             sqlite_unicode: 1
 
@@ -795,7 +796,7 @@ Checks if the given class is already loaded in memory or not.
 
 Some design aspects were borrowed from
 
-=over 
+=over
 
 =item L<Catalyst>
 
@@ -896,7 +897,7 @@ L<http://www.codeplex.com/ChinookDatabase>.
   - Update form, focus problem (focus in field should deactivate TreeNav)
   - add insert link in table descr
 
-  - export Excel : ordre des colonnes incorrect
+  - export Excel : use column groups
   - export Excel : figer les volets
 
   - deal with Favicon.ico
@@ -908,6 +909,9 @@ L<http://www.codeplex.com/ChinookDatabase>.
   - bulk update : maybe would need special authorization
 
   - add a .tsv View
+
+  - 
+
 
 =head1 LICENSE AND COPYRIGHT
 

@@ -30,9 +30,7 @@
 
 [%# ---------- start body ---------- %]
 
-
-
-
+<a href="perl_code" class="link_descr">Perl source code</a>
 <h1>List of tables</h1>
 
 <div id="TN_tree" onPing="followLink">
@@ -46,8 +44,8 @@
     [% FOREACH table IN group.tables %]
       [% SET table_name = table.TABLE_NAME %]
       <div class="TN_leaf">
-        <a href="table/[% table_name %]/descr" class="link_descr">descr</a>
-        <a href="table/[% table_name %]/search"  class="TN_label"
+        <a href="../table/[% table_name %]/descr" class="link_descr">descr</a>
+        <a href="../table/[% table_name %]/search"  class="TN_label"
            title="search this table">
           [%~ table_name ~%]
         </a>

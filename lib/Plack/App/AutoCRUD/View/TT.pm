@@ -45,6 +45,17 @@ sub render {
                [encode_utf8($output)] ];
 }
 
+
+sub default_dashed_args {
+  my ($self, $context) = @_;
+
+  return (-page_index => 1,
+          -page_size  => ($context->app->default('page_size') || 50));
+}
+
+
+
+
 1;
 
 

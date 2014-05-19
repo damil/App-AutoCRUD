@@ -8,10 +8,15 @@ use Moose;
 use namespace::clean -except => 'meta';
 
 sub render {
-  my ($self, $node, %args) = @_;
+  my ($self, $data, $context) = @_;
 
-  return [500, ['Content-type' => 'text/plain'], 
-               ["attempt to render() from abstract class View.pm"]];
+  die "attempt to render() from abstract class View.pm";
+}
+
+
+sub default_dashed_args {
+  my ($self, $context) = @_;
+  return ();
 }
 
 1;

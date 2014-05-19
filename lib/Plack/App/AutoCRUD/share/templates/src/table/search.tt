@@ -136,6 +136,9 @@
             <input type="radio" id="o.xlsx" name="-output" value=".xlsx"
                    tabindex="1">
             <label for="o.xlsx">xlsx</label>
+            <input type="radio" id="o.tsv" name="-output" value=".tsv"
+                   tabindex="1">
+            <label for="o.tsv">tsv</label>
             <input type="radio" id="o.yaml" name="-output" value=".yaml"
                    tabindex="1">
             <label for="o.yaml">yaml</label>
@@ -147,8 +150,8 @@
             <label for="o.xml">xml</label>
         </div>
         <div class="TN_leaf">
-          <span class="TN_label colname">With page count</span>
-            <input name="-with_page_count" type="checkbox" value="1"
+          <span class="TN_label colname">With count</span>
+            <input name="-with_count" type="checkbox" value="1" checked
                    tabindex="1">
         </div>
 

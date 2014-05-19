@@ -6,7 +6,6 @@ use warnings;
 
 use Moose;
 extends 'Plack::App::AutoCRUD::Controller';
-use Carp;
 use SQL::Abstract::More;
 use List::MoreUtils            qw/mesh firstval/;
 use Clone                      qw/clone/;
@@ -23,14 +22,18 @@ sub serve {
 
   my $context = $self->context;
 
-  # seek method to dispatch to
-  my ($table, $meth_name) = $context->extract_path_segments(2);
+  # extract from path : table name and method to dispatch to
+  my ($table, $meth_name) = $context->extract_path_segments(2)
+    or die "URL too short, missing table and method name";
   my $method = $self->can($meth_name)
-    or croak "no such method: $meth_name";
+    or die "no such method: $meth_name";
 
-  # set default template and dispatch to method
+  # set default template and title
   $context->set_template("table/$meth_name.tt");
-  $self->$method($table);
+  $context->set_title($context->title . "-" . $table);
+
+  # dispatch to method
+  return $self->$method($table);
 }
 
 
@@ -60,20 +63,20 @@ sub list {
   my $req_data   = $context->req_data;
   my $datasource = $context->datasource;
 
-  # the "message" arg is sent from inserts/updates/deletes; not to be repeated
+  # the "message" arg is sent once from inserts/updates/deletes; not to
+  # be repeated in links to other queries
   my $message = delete $req_data->{-message};
 
   # dashed args are set apart
-  my %where_args = %$req_data; # need a clone because of deletes below
-  my %dashed_args = (-page_index => 1,
-                     -page_size  => ($self->app->default('page_size') || 50));
+  my %where_args  = %$req_data; # need a clone because of deletes below
+  my %dashed_args = $context->view->default_dashed_args($context);
   foreach my $arg (grep {/^-/} keys %where_args) {
     $dashed_args{$arg} = delete $where_args{$arg};
   }
 
   # some dashed args are treated here (not sent to the SQL request)
-  my $with_page_count = delete $dashed_args{-with_page_count};
-  my $template        = delete $dashed_args{-template};
+  my $with_count = delete $dashed_args{-with_count};
+  my $template   = delete $dashed_args{-template};
   $context->set_template($template) if $template;
 
   # select from database
@@ -95,21 +98,15 @@ sub list {
   $data->{rows}       = $rows;
   $data->{message}    = $message;
   $data->{criteria}   = $show_sql;
-  $data->{page_count} = $statement->page_count if $with_page_count;
+  if ($with_count) {
+    $data->{row_count}  = $statement->row_count;
+    $data->{page_count} = $statement->page_count;
+  }
 
   # links to prev/next pages
-  my $page_index = $dashed_args{-page_index};
-  my $page_size  = $dashed_args{-page_size};
-  $data->{page_index}    = $page_index;
-  $data->{offset}        = ($page_index - 1) * $page_size + 1;
-  $data->{similar_query} = $self->_query_string(%$req_data,
-                                                -page_index => 1);
-  $data->{next_page}     = $self->_query_string(%$req_data,
-                                                -page_index => $page_index+1)
-    unless @$rows < $page_size;
-  $data->{prev_page}     = $self->_query_string(%$req_data,
-                                                -page_index => $page_index-1)
-    unless $page_index <= 1;
+  $self->_add_links_to_other_pages($data, $req_data,
+                                   $dashed_args{-page_index},
+                                   $dashed_args{-page_size});
 
   # link to update form
   $data->{where_args} = $self->_query_string(
@@ -117,6 +114,24 @@ sub list {
    );
 
   return $data;
+}
+
+
+sub _add_links_to_other_pages {
+  my ($self, $data, $req_data, $page_index, $page_size) = @_;
+
+  return unless defined $page_index && defined $page_size;
+
+  $data->{page_index}    = $page_index;
+  $data->{offset}        = ($page_index - 1) * $page_size + 1;
+  $data->{similar_query} = $self->_query_string(%$req_data,
+                                                -page_index => 1);
+  $data->{next_page}     = $self->_query_string(%$req_data,
+                                                -page_index => $page_index+1)
+    unless @{$data->{rows}} < $page_size;
+  $data->{prev_page}     = $self->_query_string(%$req_data,
+                                                -page_index => $page_index-1)
+    unless $page_index <= 1;
 }
 
 
@@ -315,8 +330,40 @@ sub _query_string {
 
 1;
 
-
 __END__
+
+=head1 NAME
+
+Plack::App::AutoCRUD::Controller::Table - Table controller
+
+=head1 DESCRIPTION
+
+This controller provides methods for searching and describing
+a given table within some datasource.
+
+=head1 METHODS
+
+=head2 serve
+
+Entry point to the controller; from the URL, it extracts the table
+name and the name of the method to dispatch to (the URL is expected
+to be of shape C<< table/{table_name}/{$method_name}?{arguments} >>).
+It also sets the default template to C<< table/{method_name}.tt >>.
+
+=head2 descr
+
+Returns a hashref describing the table, with keys C<descr>
+(description information from the config), C<table> (table name),
+C<colgroups> (datastructure as returned from 
+L<Plack::App::AutoCRUD::DataSource/colgroups>), and 
+C<primary_key> (arrayref of primary key columns).
+
+=head2 list
+
+Returns a list of records from the table, corresponding to the query
+parameters specified in the URL. 
+[TODO: EXPLAIN MORE]
+
 
 
 

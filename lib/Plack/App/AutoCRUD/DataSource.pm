@@ -28,6 +28,12 @@ has 'query_parser' => (is => 'ro', isa => 'SQL::Abstract::FromQuery',
 has 'tablegroups'  => (is => 'ro', isa => 'ArrayRef',
                        builder => '_tablegroups', lazy => 1);
 
+# indirectly generated through the _schema builder method
+has 'generated_schema' => (is => 'ro', isa => 'Str', init_arg => undef);
+has 'loaded_class'     => (is => 'ro', isa => 'Str', init_arg => undef);
+
+
+
 #======================================================================
 # ATTRIBUTE BUILDERS
 #======================================================================
@@ -78,9 +84,9 @@ sub _schema {
   # if external code is required, load it
   if ($required_class && 
         !($schema_class && $self->app->is_class_loaded($schema_class))) {
-    my $loaded_class = $self->app->try_load_class($required_class)
+    $self->{loaded_class} = $self->app->try_load_class($required_class)
       or die "Can't locate $required_class";
-    $schema_class = $self->config('schema_class') || $loaded_class;
+    $schema_class = $self->config('schema_class') || $self->{loaded_class};
   }
 
   # generate class on the fly if needed
@@ -88,6 +94,7 @@ sub _schema {
     $schema_class = (ref $self) . "::_Auto_Schema::" . $self->name;
 
     if (! $self->app->is_class_loaded($schema_class)) {
+      # build a schema generator from the DBI connection
       require DBIx::DataModel::Schema::Generator;
       my $generator = DBIx::DataModel::Schema::Generator->new(
         -schema => $schema_class,
@@ -95,13 +102,18 @@ sub _schema {
       my @args = map {$self->config('dbh', $_)} qw/db_catalog db_schema db_type/;
       $generator->parse_DBI($self->dbh, @args);
 
+      # generate and store perl code
+      $self->{generated_schema} = $generator->perl_code;
+
       # eval source code on the fly
-      $generator->load();
+      eval $self->{generated_schema};
     }
   }
 
   return $schema_class;
 }
+
+
 
 
 sub _query_parser {

@@ -35,6 +35,7 @@ test_requires (
 
 requires (
   'Alien::GvaScript'               => 1.43,
+  'Archive::Zip'                   => 0,
   'Carp'                           => 0,
   'CGI::Expand'                    => 0,
   'Clone'                          => 0,

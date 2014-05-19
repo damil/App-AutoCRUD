@@ -31,3 +31,18 @@ sub serve {
 
 __END__
 
+=head1 NAME
+
+Plack::App::AutoCRUD::Controller::GvaScript
+
+=head1 DESCRIPTION
+
+Controller for returning L<Alien::GvaScript> components.
+
+=head1 METHODS
+
+=head2 serve
+
+Finds the requested GvaScript file from the URL path, and returns
+that file through the L<Plack::App::AutoCRUD::View::Download> view.
+

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
  <head>
-  <title>[% template.title OR site.title %]</title>
+  <title>[% c.title OR template.title OR site.title %]</title>
 
   [% FOREACH style IN page.linked_styles.unique;
        "<link href=\"$style\" rel=\"stylesheet\" type=\"text/css\" />\n";

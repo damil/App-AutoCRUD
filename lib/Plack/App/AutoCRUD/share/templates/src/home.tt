@@ -9,7 +9,7 @@ Available datasources :
 
 [% FOREACH source IN data.keys.sort %]
 <tr>
-  <td><a href="[% base %][% source %]/schema">[% source %]</a></td>
+  <td><a href="[% base %][% source %]/schema/tablegroups">[% source %]</a></td>
   <td><em>[% data.$source.descr %]</em></td>
 </tr>
 
