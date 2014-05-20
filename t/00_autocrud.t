@@ -10,8 +10,9 @@ use FindBin;
 
 
 # setup config
-my $sqlite_file = "Chinook_Sqlite_AutoIncrementPKs.sqlite";
-my $sqlite_path = "$FindBin::Bin/../examples/Chinook/$sqlite_file";
+my $sqlite_path = "$FindBin::Bin/data/"
+                . "Chinook_Sqlite_AutoIncrementPKs_empty_tables.tst_sqlite";
+
 my $connect_options = {
   RaiseError     => 1,
   sqlite_unicode => 1,

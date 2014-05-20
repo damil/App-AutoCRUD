@@ -1,5 +1,8 @@
 Revision history for Plack-App-AutoCRUD
 
+0.04 20.05.2014
+  - supply a minimal SQLite database in the distrib for tests
+
 0.03 19.05.2014
   - refactoring & doc improvements
 
