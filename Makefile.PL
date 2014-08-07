@@ -3,8 +3,8 @@ use strict;
 use warnings FATAL => 'all';
 use inc::Module::Install;
 
-name     'Plack-App-AutoCRUD';
-all_from 'lib/Plack/App/AutoCRUD.pm';
+name     'App-AutoCRUD';
+all_from 'lib/App/AutoCRUD.pm';
 author   q{Laurent Dami <dami@cpan.org>};
 license  'artistic2';
 
@@ -14,10 +14,10 @@ tests_recursive('t');
 
 resources (
    homepage   => 'https://metacpan.org/author/DAMI',
-   #IRC        => 'irc://irc.perl.org/#Plack-App-AutoCRUD',
+   #IRC        => 'irc://irc.perl.org/#App-AutoCRUD',
    license    => 'http://www.perlfoundation.org/artistic_license_2_0',
-   repository => 'git://github.com/damil/Plack-App-AutoCRUD.git',
-   bugtracker => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Plack-App-AutoCRUD',
+   repository => 'git://github.com/damil/App-AutoCRUD.git',
+   bugtracker => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-AutoCRUD',
 );
 
 configure_requires (

@@ -1,7 +1,7 @@
 [% # config/main
    #
 
-   title = "Plack::App::AutoCRUD sample page";
+   title = "App::AutoCRUD sample page";
    base   = c.base;
    dsbase = base _ c.datasource.name _ "/"; # "datasource" base
 

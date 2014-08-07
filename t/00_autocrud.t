@@ -4,7 +4,7 @@ use warnings;
 use Plack::Test;
 use Test::More;
 use HTTP::Request::Common;
-use Plack::App::AutoCRUD;
+use App::AutoCRUD;
 
 use FindBin;
 
@@ -32,7 +32,7 @@ my $config = {
 
 
 # instantiate the app
-my $crud = Plack::App::AutoCRUD->new(config => $config);
+my $crud = App::AutoCRUD->new(config => $config);
 my $app  = $crud->to_app;
 
 # start testing

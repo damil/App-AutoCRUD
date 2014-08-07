@@ -5,7 +5,7 @@ use warnings;
 
 use lib "../lib";
 
-use Plack::App::AutoCRUD;
+use App::AutoCRUD;
 use Path::Tiny;
 use YAML::Any qw/LoadFile/;
 
@@ -34,7 +34,7 @@ $config->{datasources}{Sakila}{dbh}{connect}[0]
       ["dbname=".$this_dir->child(Sakila => $1)->canonpath]e;
 
 # create app
-my $crud = Plack::App::AutoCRUD->new(config => $config);
+my $crud = App::AutoCRUD->new(config => $config);
 my $app  = $crud->to_app;
 
 # Allow this script to be run also directly (without 'plackup'), so that
