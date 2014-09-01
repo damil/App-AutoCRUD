@@ -37,7 +37,8 @@ sub serve {
 }
 
 
-sub redirect {
+sub redirect { # implemented through a view, which is a bit hacky, but fits
+               # nicely with the general "respond" method above
   my ($self, $url) = @_;
 
   my $context    = $self->context;
@@ -85,4 +86,7 @@ Sets the C<view> attribute in L<App::AutoCRUD::Context>
 to an instance of L<App::AutoCRUD::View::Redirect>;
 then returns the given URL.
 
+This is used by all POST methods, following the
+L<http://en.wikipedia.org/wiki/Post/Redirect/Get> pattern
+to avoid duplicate form submissions.
 

@@ -13,7 +13,8 @@ use namespace::clean -except => 'meta';
 sub render {
   my ($self, $url, $context) = @_;
 
-  return [302, [Location => $url], []];
+  # see http://en.wikipedia.org/wiki/303_See_Other
+  return [303, [Location => $url], []]; 
 }
 
 1;

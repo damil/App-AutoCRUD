@@ -1,5 +1,11 @@
 Revision history for Plack-App-AutoCRUD
 
+  - redirect through HTTP 1.1 303 instead of 302 
+     (see http://en.wikipedia.org/wiki/303_See_Other)
+
+0.05 08.08.2014
+  - renamed to App::AutoCRUD
+
 0.04 20.05.2014
   - supply a minimal SQLite database in the distrib for tests
 

@@ -9,7 +9,7 @@ use DBI;
 use Clone           qw/clone/;
 use List::MoreUtils qw/part/;
 use Scalar::Does    qw/does/;
-use SQL::Abstract::FromQuery;
+use SQL::Abstract::FromQuery 0.05;
 
 use namespace::clean -except => 'meta';
 
@@ -46,10 +46,12 @@ sub _dbh {
   if (my $connect_spec = $self->config(qw/dbh connect/)) {
     if (does($connect_spec, 'ARRAY')) {
       # regular DBI connect using the given list of arguments
-      $dbh = DBI->connect(@$connect_spec);
+      $dbh = DBI->connect(@$connect_spec)
+        or die "can't connect to " . join(", ", @$connect_spec);
     }
     elsif (does($connect_spec, 'CODE')) {
-      $dbh = $connect_spec->();
+      $dbh = $connect_spec->()
+        or die "coderef connection to " . self->name . " failed";
     }
     elsif (does($connect_spec, '""')) {
       # config was a string : treat it as a line of Perl code
@@ -95,7 +97,12 @@ sub _schema {
 
     if (! $self->app->is_class_loaded($schema_class)) {
       # build a schema generator from the DBI connection
+
+      my $dbh = $self->dbh;
+
       require DBIx::DataModel::Schema::Generator;
+
+
       my $generator = DBIx::DataModel::Schema::Generator->new(
         -schema => $schema_class,
        );

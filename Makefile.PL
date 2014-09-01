@@ -8,7 +8,7 @@ all_from 'lib/App/AutoCRUD.pm';
 author   q{Laurent Dami <dami@cpan.org>};
 license  'artistic2';
 
-perl_version 5.006;
+perl_version 5.010;
 
 tests_recursive('t');
 
@@ -56,7 +56,7 @@ requires (
   'Plack'                          => 0,
   'Scalar::Does'                   => 0,
   'Scalar::Util'                   => 0,
-  'SQL::Abstract::FromQuery'       => 0,
+  'SQL::Abstract::FromQuery'       => 0.05,
   'Template'                       => 0,
   'Time::HiRes'                    => 0,
   'Try::Tiny'                      => 0,
