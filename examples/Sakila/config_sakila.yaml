@@ -15,5 +15,6 @@ datasources :
         - ""
         - RaiseError: 1
           sqlite_unicode: 1
+          sqlite_open_flags: 2 # SQLITE_OPEN_READWRITE
 
 # no custom Sakila config yet
