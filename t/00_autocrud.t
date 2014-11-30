@@ -61,7 +61,7 @@ test_psgi $app, sub {
 
   # search form (POST)
   $res = $cb->(POST "/Chinook/table/MediaType/search");
-  is $res->code, 302,                                "redirecting POST search";
+  is $res->code, 303,                                "redirecting POST search";
   like $res->header('location'), qr/^list\?/,        "redirecting to 'list'";
 
   # list
