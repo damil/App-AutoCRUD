@@ -42,10 +42,10 @@
   function add_checkboxes(a_element) {
     var vals = [];
     $('list_form').getInputs('checkbox').each(function(box) {
-       if (box.checked) vals.push(box.value);
+       if (box.checked) vals.push(encodeURIComponent(box.value));
     });
     if (vals.length > 0) {
-      a_element.href += "where.[% pk_name %]=" + vals.join(",");
+      a_element.href += "where.[% pk_name | url %]=" + vals.join(",");
       return true;
     }
     else {
@@ -63,12 +63,12 @@
   [% BLOCK page_links %]
   <div>
     [% IF data.prev_page; %]
-      <a href="list?[% data.prev_page %]" [% " id='prev_page'" IF with_ids %]
+      <a href="list?[% data.prev_page | url %]" [% " id='prev_page'" IF with_ids %]
          title="press LEFT key">prev</a>
     [% END; %]
     [% " | "   IF data.prev_page && data.next_page; %]
     [% IF data.next_page; %]
-      <a href="list?[% data.next_page %]" [% " id='next_page'" IF with_ids %]
+      <a href="list?[% data.next_page | url %]" [% " id='next_page'" IF with_ids %]
          title="press RIGHT key">next</a>
     [% END; %]
     [% " page" IF data.prev_page || data.next_page; %]
@@ -84,13 +84,13 @@
       check/uncheck all records in page
         <input type=checkbox onpropertychange="propagate_checkbox(this)"> 
       <br>
-      <a href="update?_noupd=[% pk_name %]&" 
+      <a href="update?_noupd=[% pk_name | url %]&" 
          onclick="return add_checkboxes(this)">update</a> |
       <a href="delete?" 
          onclick="return add_checkboxes(this)">delete</a> checked records
       <br>
-      <a href="update?_noupd=[% pk_name %]&[% data.where_args %]">update</a> |
-      <a href="delete?[% data.where_args %]">delete</a> whole result set
+      <a href="update?_noupd=[% pk_name | url %]&[% data.where_args | url %]">update</a> |
+      <a href="delete?[% data.where_args | url %]">delete</a> whole result set
   [% END; # IF data.rows.size > 0 %]
   <br>
   <a href="insert">insert</a> a new record
@@ -103,7 +103,7 @@
   <b>Criteria</b>: [% (data.criteria || 'none') FILTER html %]<br>
   <br>
   search again with <a href="search">new</a> | 
-                    <a href="search?[% data.similar_query %]">similar</a> criteria
+                    <a href="search?[% data.similar_query | url %]">similar</a> criteria
 </div>
 
 [% IF data.message; # could be a message coming from the last update() %]
@@ -132,7 +132,7 @@
         <span class="record_num">#[% record_num = data.offset + loop.count - 1;
                                      record_num %]</span>
         <div class="TN_node record">
-          <a class="TN_label record_key" href="id/[% pk %]">
+          <a class="TN_label record_key" href="id/[% pk | url %]">
              [%~ pk || record_num ~%]
           </a>
           <div class="TN_content">
