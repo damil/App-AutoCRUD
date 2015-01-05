@@ -19,7 +19,7 @@ use YAML::Any         qw/Dump/;
 use namespace::clean -except => 'meta';
 
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 has 'config'      => (is => 'bare', isa => 'HashRef', required => 1);
 has 'dir'         => (is => 'ro',   isa => 'Str',

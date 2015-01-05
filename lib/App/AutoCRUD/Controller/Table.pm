@@ -209,6 +209,7 @@ sub update {
     # filtering criteria
     my $where  = $req_data->{where} or die "update without any '-where' clause";
     my $criteria = $datasource->query_parser->parse($where);
+    $criteria or die "update without any 'where' criteria";
 
     # perform the update
     my $db_table  = $datasource->schema->db_table($table);
@@ -255,6 +256,7 @@ sub delete {
   if ($context->req->method eq 'POST') {
     my $where = $req_data->{where} or die "delete without any '-where' clause";
     my $criteria = $datasource->query_parser->parse($where);
+    $criteria or die "delete without any 'where' criteria";
 
     # perform the delete
     my $db_table  = $datasource->schema->db_table($table);
