@@ -31,9 +31,9 @@
   <a href="[% table_url %]/search">search</a> this table
   <br>
   <br>
-  <a href="[% table_url %]/update?[% data.update_args %]">update</a> |
-  <a href="[% table_url %]/delete?[% data.delete_args %]">delete</a> |
-  <a href="[% table_url %]/insert?[% data.clone_args %]">clone</a> this record
+  <a href="[% table_url %]/update?[% data.update_args | url %]">update</a> |
+  <a href="[% table_url %]/delete?[% data.delete_args | url %]">delete</a> |
+  <a href="[% table_url %]/insert?[% data.clone_args | url %]">clone</a> this record
 </div>
 
 <h1>Record from [% data.table %]</h1>

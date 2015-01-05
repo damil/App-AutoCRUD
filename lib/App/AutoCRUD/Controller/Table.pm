@@ -156,10 +156,7 @@ sub id {
   # links
   my %where_pk = map { ("where_pk.$_" => $criteria{$_}) } keys %criteria;
   $data->{delete_args} = $self->_query_string(%where_pk);
-  $data->{update_args} = $self->_query_string(
-    %where_pk,
-    (map { ("curr.$_" => $row->{$_}) } grep {defined $row->{$_}} keys %$row),
-   );
+  $data->{update_args} = $self->_query_string(%where_pk);
   my @clone_args = map  { ($_ => $row->{$_}) } 
                    grep {!$is_pk{$_} && defined $row->{$_}} keys %$row;
   $data->{clone_args} = $self->_query_string(@clone_args);
@@ -227,10 +224,15 @@ sub update {
   else {
     # display the update form
     my $data = $self->descr($table);
-    my $json_maker = JSON->new();
+    my $json_maker = JSON->new->convert_blessed;
     if (my $where_pk  = delete $req_data->{where_pk}) {
       $data->{where_pk} = $where_pk;
       $req_data->{where} = $where_pk;
+
+      my $criteria = $datasource->query_parser->parse($where_pk);
+      my $db_table = $datasource->schema->db_table($table);
+      $req_data->{curr} = $db_table->select(-where     => $criteria,
+                                            -result_as => 'firstrow');
     };
     if (my $noupd = delete $req_data->{_noupd}) {
       # fields that should not be updatable

@@ -74,10 +74,13 @@ test_psgi $app, sub {
   like $res->content, qr(records 1 - 2),             "found 2 records";
   like $res->content, qr(Protected MPEG),            "found Protected MPEG";
 
+  # id
+  $res = $cb->(GET "/Chinook/table/Album/id/1");
+  like $res->content, qr(Album/update[^"]*">),       "update link";
+
   # TODO : test list outputs as xlsx, yaml, json, xml
 
   # TODO : test descr, update, insert, delete
-
 };
 
 # signal end of tests
