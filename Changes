@@ -1,5 +1,7 @@
 Revision history for Plack-App-AutoCRUD
 
+0.06 05.01.2015
+  - fixed missing url-encoding in internal links
   - redirect through HTTP 1.1 303 instead of 302 
      (see http://en.wikipedia.org/wiki/303_See_Other)
 
