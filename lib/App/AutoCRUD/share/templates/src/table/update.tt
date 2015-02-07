@@ -25,12 +25,6 @@
 
   window.onload = setup;
 
-  function confirm_n_ary_update () {
-    return confirm('This action will simultaneously update all records '
-                  +'corresponding to the "where/and" criteria.'
-                  +"\nDo you really want to continue ?");
-  }
-
   function on_focus_input(event) {
     var label = get_label(event);
     if (label)
@@ -52,6 +46,7 @@
   }
     
 </script>
+[% WRAPPER linked_script %][% base %]static/js/autocrud_utils.js[% END %]
 
 [% END; # WRAPPER head %]
 
@@ -65,10 +60,9 @@
 
 <h1>Update [% data.table %]</h1>
 
-
-
 <form action="update" method="POST" id='update_form' accept-charset='utf-8'
-   [% "onsubmit='return confirm_n_ary_update()'" IF ! data.where_pk %]>
+   [% "onsubmit='return confirm_n_ary_operation(this,\"update\")'" 
+         IF ! data.where_pk %]>
 
   <div id="TN_tree">
     [% USE group_iter = iterator(data.colgroups) %]

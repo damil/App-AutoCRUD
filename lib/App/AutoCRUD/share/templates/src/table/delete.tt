@@ -1,4 +1,6 @@
 [% WRAPPER head %]
+
+
 <style>
   .groupname { font-weight: bold; color: navy; font-size: 120% }
   .colname   { width: 25%; padding-left : 1em }
@@ -18,13 +20,8 @@
      });
   }
   window.onload = setup;
-  function confirm_n_ary_delete () {
-    return confirm('This action will simultaneously delete all records '
-                  +'corresponding to the "where/and" criteria.'
-                  +"\nDo you really want to continue ?");
-  }
-
 </script>
+[% WRAPPER linked_script %][% base %]static/js/autocrud_utils.js[% END %]
 
 [% END; # WRAPPER head %]
 
@@ -40,7 +37,7 @@
 
 
 <form action="delete" method="POST" id='delete_form' 
-   [% "onsubmit='return confirm_n_ary_delete()'" IF ! data.where_pk %]>
+   [% "onsubmit='return confirm_n_ary_operation(this,\"delete\")'" IF ! data.where_pk %]>
 
   <div id="TN_tree">
 

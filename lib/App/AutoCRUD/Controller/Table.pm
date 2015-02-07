@@ -189,6 +189,7 @@ sub search {
 }
 
 
+
 sub update {
   my ($self, $table) = @_;
 
@@ -309,6 +310,33 @@ sub insert {
     return $data;
   }
 }
+
+
+sub count_where { # used in Ajax mode by update and delete forms
+  my ($self, $table) = @_;
+
+  my $context    = $self->context;
+  my $req_data   = $context->req_data;
+  my $datasource = $context->datasource;
+
+  my $n_records = -1;
+
+  if (my $where = $req_data->{where}) {
+    my $criteria = $datasource->query_parser->parse($where);
+    if ($criteria and keys %$criteria) {
+      my $db_table  = $datasource->schema->db_table($table);
+      my $result = $db_table->select(
+        -columns   => 'COUNT(*)',
+        -where     => $criteria,
+        -result_as => 'flat_arrayref',
+       );
+      $n_records = $result->[0];
+    }
+  }
+
+  return {n_records => $n_records};
+}
+
 
 
 
