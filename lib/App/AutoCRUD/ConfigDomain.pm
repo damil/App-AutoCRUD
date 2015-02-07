@@ -27,6 +27,7 @@ sub DataSource {
              String(-name => "connect username"),
              String(-name => "connect password"),
              Struct(-name => "connect options", -optional => 1)),
+        Whatever(-does => 'CODE', -name => "coderef for connection"),
         String(-name => "eval code for connection"),
        ),
       db_catalog => String(-optional => 1),
