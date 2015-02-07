@@ -5,27 +5,32 @@ use Plack::Test;
 use Test::More;
 use HTTP::Request::Common;
 use App::AutoCRUD;
-
 use FindBin;
+use DBI;
 
-
-# setup config
 my $sqlite_path = "$FindBin::Bin/data/"
                 . "Chinook_Sqlite_AutoIncrementPKs_empty_tables.tst_sqlite";
 
-my $connect_options = {
-  RaiseError     => 1,
-  sqlite_unicode => 1,
+# connect to an in-memory copy of the database
+my $in_memory_dbh_copy = sub  {
+  my $connect_options = {
+    RaiseError     => 1,
+    sqlite_unicode => 1,
+  };
+  my $dbh = DBI->connect("dbi:SQLite:dbname=:memory:", "", "", $connect_options);
+  $dbh->sqlite_backup_from_file($sqlite_path);
+  return $dbh;
 };
+
+
+# setup config
 my $config = {
   app => { name => "Demo",
            title => "AutoCRUD demo application",
          },
   datasources => {
     Chinook => {
-      dbh => {
-        connect => ["dbi:SQLite:dbname=$sqlite_path", "", "", $connect_options],
-      },
+      dbh => {connect => $in_memory_dbh_copy},
      },
    },
 };
@@ -81,6 +86,28 @@ test_psgi $app, sub {
   # TODO : test list outputs as xlsx, yaml, json, xml
 
   # TODO : test descr, update, insert, delete
+
+  # update without a -where clause
+  $res = $cb->(POST "/Chinook/table/Album/update", {'set.Title' => 'foobar'});
+  is $res->code, 500;
+  like $res->content, qr(without any '-where'),       "update without -where";
+
+  # update with an empty -where clause
+  $res = $cb->(POST "/Chinook/table/Album/update", {'set.Title'     => 'foobar',
+                                                    'where.AlbumId' => ""});
+  is $res->code, 500;
+  like $res->content, qr(without any '-where'),       "update with empty -where";
+
+  # delete without a -where clause
+  $res = $cb->(POST "/Chinook/table/Album/delete");
+  is $res->code, 500;
+  like $res->content, qr(without any '-where'),       "delete without -where";
+
+  # delete with an empty -where clause
+  $res = $cb->(POST "/Chinook/table/Album/delete", {'where.AlbumId' => ""});
+  is $res->code, 500;
+  like $res->content, qr(without any '-where'),       "delete with empty -where";
+
 };
 
 # signal end of tests
