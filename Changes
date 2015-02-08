@@ -1,5 +1,13 @@
 Revision history for Plack-App-AutoCRUD
 
+
+0.09 08.02.2015
+  - adaptations to allow the Ajax call to also work on MSIE9
+
+0.08 08.02.2015
+  - RT#101986 : add Ajax calls to count how many records would be affected
+                by a bulk operation
+
 0.07 05.01.2015
   - won't allow update/delete without any 'where' criteria
 

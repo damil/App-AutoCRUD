@@ -20,7 +20,7 @@ sub render {
   my $json_maker = JSON->new(%{$self->{json_args}});
   my $output = $json_maker->encode($data);
 
-  return [200, ['Content-type' => 'application/json; charset: utf-8'], 
+  return [200, ['Content-type' => 'application/json; charset=UTF-8'],
                [$output] ];
 }
 
