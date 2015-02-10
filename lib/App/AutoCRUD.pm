@@ -812,8 +812,8 @@ Laurent Dami, C<< <dami at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-plack-app-crud at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Plack-App-AutoCRUD>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-app-autocrud at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-AutoCRUD>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 
@@ -830,25 +830,25 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Plack-App-AutoCRUD>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-AutoCRUD>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/Plack-App-AutoCRUD>
+L<http://annocpan.org/dist/App-AutoCRUD>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/Plack-App-AutoCRUD>
+L<http://cpanratings.perl.org/d/App-AutoCRUD>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Plack-App-AutoCRUD/>
+L<http://search.cpan.org/dist/App-AutoCRUD/>
 
 =back
 
 
 The source code is at
-L<https://github.com/damil/Plack-App-AutoCRUD>.
+L<https://github.com/damil/App-AutoCRUD>.
 
 
 =head1 SEE ALSO
@@ -915,7 +915,7 @@ L<http://www.codeplex.com/ChinookDatabase>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2014 Laurent Dami.
+Copyright 2014, 2015 Laurent Dami.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the the Artistic License (2.0). You may obtain a
