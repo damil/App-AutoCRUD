@@ -82,7 +82,7 @@
   [% IF data.rows.size > 0 %]
       <br>
       check/uncheck all records in page
-        <input type=checkbox onpropertychange="propagate_checkbox(this)"> 
+        <input type=checkbox onchange="propagate_checkbox(this)"> 
       <br>
       <a href="update?_noupd=[% pk_name | url %]&" 
          onclick="return add_checkboxes(this)">update</a> |
