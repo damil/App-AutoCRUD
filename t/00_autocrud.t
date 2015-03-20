@@ -83,7 +83,17 @@ test_psgi $app, sub {
   $res = $cb->(GET "/Chinook/table/Album/id/1");
   like $res->content, qr(Album/update[^"]*">),       "update link";
 
-  # TODO : test list outputs as xlsx, yaml, json, xml
+  $res = $cb->(GET "/Chinook/table/Album/id/1.yaml");
+  like $res->content, qr(AlbumId:\s*1),              "yaml view";
+
+  $res = $cb->(GET "/Chinook/table/Album/id/1.json");
+  like $res->content, qr("AlbumId"\s*:\s*1),         "json view";
+
+  $res = $cb->(GET "/Chinook/table/Album/id/1.xml");
+  like $res->content, qr(<row[^>]*AlbumId="1"),      "xml view";
+
+
+  # TODO : test list outputs as xlsx,
 
   # TODO : test descr, update, insert, delete
 
