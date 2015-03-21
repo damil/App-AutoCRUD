@@ -8,8 +8,7 @@ use Moose;
 extends 'App::AutoCRUD::Controller';
 use SQL::Abstract::More;
 use List::MoreUtils            qw/mesh firstval/;
-use Clone                      qw/clone/;
-use JSON;
+use JSON::MaybeXS ();
 use URI;
 
 use namespace::clean -except => 'meta';
@@ -108,7 +107,7 @@ sub list {
                                    $dashed_args{-page_index},
                                    $dashed_args{-page_size});
 
-  # link to update form
+  # link to update/delete forms
   $data->{where_args} = $self->_query_string(
     map { ("where.$_" => $where_args{$_}) } keys %where_args,
    );
@@ -182,8 +181,7 @@ sub search {
     my @cols = split /,/, (delete $req_data->{-columns} || "");
     $req_data->{"col.$_"} = 1 foreach @cols;
     my $data = $self->descr($table);
-    my $json_maker = JSON->new();
-    $data->{init_form} = $json_maker->encode($req_data);
+    $data->{init_form} = $self->_encode_json($req_data);
     return $data;
   }
 }
@@ -226,7 +224,6 @@ sub update {
   else {
     # display the update form
     my $data = $self->descr($table);
-    my $json_maker = JSON->new->convert_blessed;
     if (my $where_pk  = delete $req_data->{where_pk}) {
       $data->{where_pk} = $where_pk;
       $req_data->{where} = $where_pk;
@@ -240,7 +237,7 @@ sub update {
       # fields that should not be updatable
       $data->{noupd}{$_} = 1 foreach split qr[/], $noupd;
     }
-    $data->{init_form} = $json_maker->encode($req_data);
+    $data->{init_form} = $self->_encode_json($req_data);
 
     return $data;
   }
@@ -276,8 +273,7 @@ sub delete {
       $data->{where_pk}  = $where_pk;
       $req_data->{where} = $where_pk;
     };
-    my $json_maker = JSON->new();
-    $data->{init_form} = $json_maker->encode($req_data);
+    $data->{init_form} = $self->_encode_json($req_data);
 
     return $data;
   }
@@ -304,8 +300,7 @@ sub insert {
   else {
     # display the insert form
     my $data = $self->descr($table);
-    my $json_maker = JSON->new();
-    $data->{init_form} = $json_maker->encode($req_data);
+    $data->{init_form} = $self->_encode_json($req_data);
 
     return $data;
   }
@@ -353,18 +348,26 @@ sub _query_string {
     my $val = $params{$key};
     length $val or next KEY;
 
-    # cheap URI escape
+    # cheap URI escape (for chars '=', '&', ';' and '+')
     s/=/%3D/g, s/&/%26/g, s/;/%3B/g, s/\+/%2B/g for $key, $val;
 
     push @fragments, "$key=$val";
   }
-  return join "&", @fragments;
 
-  # TODO: decide about proper way to handle accented chars in URIs.
-  # URI_escape did not work because of conflicts utf8/latin1
-  # Hints : http://www.w3.org/International/articles/idn-and-iri/
-  #         L<URI/as_iri>
+  return join "&", @fragments;
 }
+
+
+sub _encode_json {
+  my ($self, $data) = @_;
+
+  # utf8-encoding is done in the view, so here we turn it off
+  my $json_maker = JSON::MaybeXS->new(allow_blessed   => 1,
+                                      convert_blessed => 1,
+                                      utf8            => 0);
+  return $json_maker->encode($data);
+}
+
 
 
 1;
@@ -401,7 +404,7 @@ C<primary_key> (arrayref of primary key columns).
 
 Returns a list of records from the table, corresponding to the query
 parameters specified in the URL. 
-[TODO: EXPLAIN MORE]
+[TODO: EXPLAIN MORE -- in particular the "-template" arg ]
 
 
 

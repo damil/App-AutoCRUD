@@ -8,6 +8,7 @@ use Moose;
 extends 'App::AutoCRUD::View';
 
 use Template;
+use Template::Filters ();
 use Encode qw/encode_utf8/;
 
 use namespace::clean -except => 'meta';
@@ -28,6 +29,7 @@ sub render {
     WRAPPER      => 'lib/site/wrapper',
     ERROR        => 'src/error.tt',
     ENCODING     => 'utf8',
+    FILTERS      => { utf8_url => \&utf8_url },
     %{$self->{tt_args}},
    );
 
@@ -51,6 +53,12 @@ sub default_dashed_args {
 
   return (-page_index => 1,
           -page_size  => ($context->app->default('page_size') || 50));
+}
+
+
+sub utf8_url {
+  my $data = shift;
+  return Template::Filters::url_filter(encode_utf8($data));
 }
 
 

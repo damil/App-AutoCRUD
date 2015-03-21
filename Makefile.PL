@@ -47,7 +47,7 @@ requires (
   'Encode'                         => 0,
   'Excel::Writer::XLSX'            => 0,
   'HTTP::Date'                     => 0,
-  'JSON'                           => 0,
+  'JSON::MaybeXS'                  => 0,
   'List::MoreUtils'                => 0,
   'Moose'                          => 0,
   'MooseX::NonMoose'               => 0,
@@ -65,6 +65,7 @@ requires (
   'XML::Simple'                    => 0,
   'YAML::Any'                      => 0,
   'namespace::clean'               => 0,
+  'parent'                         => 0,
 );
 
 install_as_cpan;

@@ -4,7 +4,7 @@ use 5.010;
 use Moose;
 extends 'App::AutoCRUD::View';
 
-use JSON;
+use JSON::MaybeXS;
 use namespace::clean -except => 'meta';
 
 has 'json_args' => ( is => 'bare', isa => 'HashRef',
@@ -16,14 +16,9 @@ has 'json_args' => ( is => 'bare', isa => 'HashRef',
 sub render {
   my ($self, $data, $context) = @_;
 
-  # initialize the JSON object (GRR ... can no longer just pass args to new())
-  my $json_maker = JSON->new;
-  while (my ($meth, $arg) = each %{$self->{json_args}}) {
-    $json_maker->$meth($arg);
-  }
-
   # encode output
-  my $output = $json_maker->encode($data);
+  my $json_maker = JSON::MaybeXS->new(%{$self->{json_args}});
+  my $output     = $json_maker->encode($data);
 
   return [200, ['Content-type' => 'application/json; charset=UTF-8'],
                [$output] ];

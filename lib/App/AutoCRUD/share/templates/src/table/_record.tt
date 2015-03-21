@@ -18,7 +18,7 @@
                   <span class="val">[% val | html | replace('\n', '<br>') %]</span>
                   [% FOREACH path IN col.paths;
                      loop.first ? "&rArr;" : ", "; %]
-                     <a href="[% dsbase %]table/[% path.to_table %]/list?[% path.foreign_key %]='[% val %]'">
+                     <a href="[% dsbase %]table/[% path.to_table | utf8_url %]/list?[% path.foreign_key | utf8_url %]='[% val | utf8_url %]'">
                        [%~ path.name ~%]
                      </a>
                   [% END; # FOREACH path IN col.paths %]

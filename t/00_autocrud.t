@@ -7,6 +7,8 @@ use HTTP::Request::Common;
 use App::AutoCRUD;
 use FindBin;
 use DBI;
+use JSON::MaybeXS;
+use Encode;
 
 my $sqlite_path = "$FindBin::Bin/data/"
                 . "Chinook_Sqlite_AutoIncrementPKs_empty_tables.tst_sqlite";
@@ -39,6 +41,10 @@ my $config = {
 # instantiate the app
 my $crud = App::AutoCRUD->new(config => $config);
 my $app  = $crud->to_app;
+
+# we will need a JSON decoder for testing. Since it uses in-memory
+# unicode strings, utf8 must be turned off
+my $json_obj = JSON::MaybeXS->new->utf8(0);
 
 # start testing
 test_psgi $app, sub {
@@ -92,10 +98,17 @@ test_psgi $app, sub {
   $res = $cb->(GET "/Chinook/table/Album/id/1.xml");
   like $res->content, qr(<row[^>]*AlbumId="1"),      "xml view";
 
-
   # TODO : test list outputs as xlsx,
 
-  # TODO : test descr, update, insert, delete
+
+  # test an update with special and accented characters
+  my $new_title = q{il était une "bergère"};
+  utf8::upgrade($new_title);
+  $res = $cb->(POST "/Chinook/table/Album/update",
+               {'where.AlbumId' => 1, 'set.Title'  => $new_title});
+  $res = $cb->(GET "/Chinook/table/Album/id/1.json");
+  my $data = $json_obj->decode($res->content);
+  is($data->{row}{Title}, $new_title,                 "updated title");
 
   # update without a -where clause
   $res = $cb->(POST "/Chinook/table/Album/update", {'set.Title' => 'foobar'});
@@ -118,6 +131,10 @@ test_psgi $app, sub {
   is $res->code, 500;
   like $res->content, qr(without any '-where'),       "delete with empty -where";
 
+
+
+
+  # TODO : test descr, update, insert, delete
 };
 
 # signal end of tests
