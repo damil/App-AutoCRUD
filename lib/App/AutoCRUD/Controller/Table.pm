@@ -141,7 +141,6 @@ sub id {
   my $data = $self->descr($table);
 
   my $pk       = $data->{primary_key};
-  my %is_pk    = map {($_ => 1)} @$pk;
   my @vals     = $self->context->extract_path_segments(scalar(@$pk));
   my %criteria = mesh @$pk, @vals;
 
@@ -156,9 +155,6 @@ sub id {
   my %where_pk = map { ("where_pk.$_" => $criteria{$_}) } keys %criteria;
   $data->{delete_args} = $self->_query_string(%where_pk);
   $data->{update_args} = $self->_query_string(%where_pk);
-  my @clone_args = map  { ($_ => $row->{$_}) } 
-                   grep {!$is_pk{$_} && defined $row->{$_}} keys %$row;
-  $data->{clone_args} = $self->_query_string(@clone_args);
 
   return $data;
 }
@@ -280,6 +276,40 @@ sub delete {
 }
 
 
+sub clone {
+  my ($self, $table) = @_;
+
+  my $context = $self->context;
+  $context->req->method eq 'GET'
+    or die "the /clone URL only accepts GET requests";
+
+  # get primary key
+  my $data    = $self->descr($table);
+  my $pk      = $data->{primary_key};
+  my %is_pk   = map {$_ => 1} @$pk;
+  my @vals    = $context->extract_path_segments(scalar(@$pk));
+
+  # get row from database
+  my $row = $self->datasource->schema->db_table($table)->fetch(@vals);
+
+  # populate req_data before calling insert()
+  my $req_data   = $context->req_data;
+  foreach my $col (keys %$row) {
+    my $val = $row->{$col};
+    $req_data->{$col} = $val if $val and !$is_pk{$col};
+  }
+
+  # cheat with path (simulating a call to insert())
+  my $path = $context->path;
+  $path =~ s/clone$/insert/;
+  $context->set_path($path);
+  $context->set_template('table/insert.tt');
+
+  # forward to insert()
+  $self->insert($table);
+}
+
+
 sub insert {
   my ($self, $table) = @_;
 
@@ -305,6 +335,7 @@ sub insert {
     return $data;
   }
 }
+
 
 
 sub count_where { # used in Ajax mode by update and delete forms

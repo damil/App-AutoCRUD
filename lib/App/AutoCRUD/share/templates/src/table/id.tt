@@ -33,7 +33,7 @@
   <br>
   <a href="[% table_url %]/update?[% data.update_args | utf8_url %]">update</a> |
   <a href="[% table_url %]/delete?[% data.delete_args | utf8_url %]">delete</a> |
-  <a href="[% table_url %]/insert?[% data.clone_args | utf8_url %]">clone</a> this record
+  <a href="[% table_url %]/clone/[% data.pk_val | utf8_url %]">clone</a> this record
 </div>
 
 <h1>Record from [% data.table %]</h1>
