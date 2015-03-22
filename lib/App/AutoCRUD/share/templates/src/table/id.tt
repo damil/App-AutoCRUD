@@ -38,9 +38,11 @@
 
 <h1>Record from [% data.table %]</h1>
 
-[% IF data.message; # could be a message coming from the last update() %]
-<div class="message">[% data.message %]</div>
-[% END; # IF data.message %]
+
+[% # maybe a message coming from the last insert() 
+   SET message_key = "-message";
+   SET message     = c.req_data.$message_key;
+   "<div class='message'>$message</div>" IF message; %]
 
 
 <h2>Primary key [% data.pk_val %]</h2>
