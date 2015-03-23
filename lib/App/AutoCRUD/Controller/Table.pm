@@ -247,12 +247,8 @@ sub _display_update_form {
                                           -result_as => 'firstrow');
   }
   else {
-    # in case of multi-columns keys, the form needs to add special fields
-    # and to ignore regular fields for those columns
-    my $where = $req_data->{where} || {};
-    my @multi_cols_keys = grep m[/], keys %$where;
-    $data->{multi_cols_keys} = \@multi_cols_keys;
-    $data->{ignore_col}{$_} = 1 foreach map {split m[/]} @multi_cols_keys;
+    # we got criteria that may touch several records
+    $self->_mark_multicols_keys($data);
   }
 
   # fields that should not be updatable
@@ -274,7 +270,8 @@ sub delete {
   my $req_data   = $context->req_data;
   my $datasource = $context->datasource;
 
-  if ($context->req->method eq 'POST') {
+  if ($context->req->method eq 'POST') { # POST => delete in database
+    # build filtering criteria
     my $where = $req_data->{where} or die "delete without any '-where' clause";
     my $criteria = $datasource->query_parser->parse($where);
     $criteria and keys %$criteria or die "delete without any '-where' criteria";
@@ -289,18 +286,27 @@ sub delete {
     my $query_string = $self->_query_string(%$where, -message => $message);
     $self->redirect("list?$query_string");
   }
-  else {
+  else {                                  # GET => display the delete form
     # display the delete form
     my $data = $self->descr($table);
     if (my $where_pk  = delete $req_data->{where_pk}) {
+      # we got the primary key of one single record
       $data->{where_pk}  = $where_pk;
       $req_data->{where} = $where_pk;
-    };
+    }
+    else {
+      # we got criteria that may touch several records
+      $self->_mark_multicols_keys($data);
+    }
+
+    # initial values for the form
     $data->{init_form} = $self->_encode_json($req_data);
 
     return $data;
   }
 }
+
+
 
 
 sub clone {
@@ -426,6 +432,19 @@ sub _encode_json {
   return $json_maker->encode($data);
 }
 
+
+sub _mark_multicols_keys {
+  my ($self, $data) = @_;
+
+  if (my $sep = $self->datasource->multicols_sep) {
+    # in case of multi-columns keys, the form needs to add special fields
+    # and to ignore regular fields for those columns
+    my $where = $self->context->req_data->{where} || {};
+    my @multi_cols_keys = grep m[$sep], keys %$where;
+    $data->{multi_cols_keys} = \@multi_cols_keys;
+    $data->{ignore_col}{$_} = 1 foreach map {split m[$sep]} @multi_cols_keys;
+  }
+}
 
 
 1;
