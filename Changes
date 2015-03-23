@@ -1,6 +1,13 @@
 Revision history for Plack-App-AutoCRUD
 
 
+0.10 23.03.2015
+  - support for multicolum keys
+  - the clone form gets populated from database, no longer from URL
+  - use JSON::MaybeXS as an entry point supporting various JSON implementations
+  - make sure that url-encoded accented characters are in utf8 representation
+  - fix propagation of checkbox clics (now using standard DOM event instead of MSIE-specific)
+
 0.09 08.02.2015
   - adaptations to allow the Ajax call to also work on MSIE9
 
