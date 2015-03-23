@@ -182,78 +182,89 @@ sub search {
 }
 
 
-
 sub update {
+  my ($self, $table) = @_;
+
+  if ($self->context->req->method eq 'POST') {
+    $self->_do_update_data($table);
+  }
+  else {
+    $self->_display_update_form($table);
+  }
+}
+
+
+sub _do_update_data {
   my ($self, $table) = @_;
 
   my $context    = $self->context;
   my $req_data   = $context->req_data;
   my $datasource = $context->datasource;
 
-  if ($context->req->method eq 'POST') { # POST => perform the update
-    # columns to update
-    my $to_set = $req_data->{set} || {};
-    foreach my $key (keys %$to_set) {
-      my $val = $to_set->{$key};
-      delete $to_set->{$key} if ! length $val;
-      $to_set->{$key} = undef if $val eq 'Null';
-    }
-    keys %$to_set or die "nothing to update";
-
-    # build filtering criteria
-    my $where  = $req_data->{where} or die "update without any '-where' clause";
-    my $criteria = $datasource->query_parser->parse($where);
-    $criteria and keys %$criteria or die "update without any '-where' criteria";
-
-    # perform the update
-    my $db_table  = $datasource->schema->db_table($table);
-    my $n_updates = $db_table->update(-set => $to_set, -where => $criteria);
-
-    # redirect to a list to display the results
-    my $message = ($n_updates == 1) ? "1 record was updated"
-                                    : "$n_updates records were updated";
-    # TODO: $message could repeat the $to_set pairs
-    my $query_string = $self->_query_string(%$where, -message => $message);
-    $self->redirect("list?$query_string");
+  # columns to update
+  my $to_set = $req_data->{set} || {};
+  foreach my $key (keys %$to_set) {
+    my $val = $to_set->{$key};
+    delete $to_set->{$key} if ! length $val;
+    $to_set->{$key} = undef if $val eq 'Null';
   }
-  else {                                  # GET => display the update form
-    # prepare data for the update form
-    my $data = $self->descr($table);
-    if (my $where_pk  = delete $req_data->{where_pk}) {
-      # we got the primary key of one single record
-      $data->{where_pk}  = $where_pk;
-      $req_data->{where} = $where_pk;
+  keys %$to_set or die "nothing to update";
 
-      # fetch current values so that we can display them on page
-      my $criteria = $datasource->query_parser->parse($where_pk);
-      my $db_table = $datasource->schema->db_table($table);
-      $req_data->{curr} = $db_table->select(-where     => $criteria,
-                                            -result_as => 'firstrow');
-    }
-    else {
-      # in case of multi-columns keys, the form needs to add special fields
-      # and to ignore regular fields for those columns
-      my $where = $req_data->{where} || {};
-      my @multi_cols_keys = grep m[/], keys %$where;
-      $data->{multi_cols_keys} = \@multi_cols_keys;
-      $data->{ignore_col}{$_} = 1 foreach map {split m[/]} @multi_cols_keys;
-    }
+  # build filtering criteria
+  my $where  = $req_data->{where} or die "update without any '-where' clause";
+  my $criteria = $datasource->query_parser->parse($where);
+  $criteria and keys %$criteria or die "update without any '-where' criteria";
 
-    # fields that should not be updatable
-    if (my $noupd = delete $req_data->{_noupd}) {
-      $data->{noupd}{$_} = 1 foreach split qr[/], $noupd;
-    }
+  # perform the update
+  my $db_table  = $datasource->schema->db_table($table);
+  my $n_updates = $db_table->update(-set => $to_set, -where => $criteria);
 
-    # initial values for the form
-    $data->{init_form} = $self->_encode_json($req_data);
-
-    return $data;
-  }
+  # redirect to a list to display the results
+  my $message = ($n_updates == 1) ? "1 record was updated"
+                                  : "$n_updates records were updated";
+  # TODO: $message could repeat the $to_set pairs
+  my $query_string = $self->_query_string(%$where, -message => $message);
+  $self->redirect("list?$query_string");
 }
 
+sub _display_update_form {
+  my ($self, $table) = @_;
 
+  my $context    = $self->context;
+  my $req_data   = $context->req_data;
+  my $datasource = $context->datasource;
+  my $data       = $self->descr($table);
 
+  if (my $where_pk  = delete $req_data->{where_pk}) {
+    # we got the primary key of one single record
+    $data->{where_pk}  = $where_pk;
+    $req_data->{where} = $where_pk;
 
+    # fetch current values so that we can display them on page
+    my $criteria = $datasource->query_parser->parse($where_pk);
+    my $db_table = $datasource->schema->db_table($table);
+    $req_data->{curr} = $db_table->select(-where     => $criteria,
+                                          -result_as => 'firstrow');
+  }
+  else {
+    # in case of multi-columns keys, the form needs to add special fields
+    # and to ignore regular fields for those columns
+    my $where = $req_data->{where} || {};
+    my @multi_cols_keys = grep m[/], keys %$where;
+    $data->{multi_cols_keys} = \@multi_cols_keys;
+    $data->{ignore_col}{$_} = 1 foreach map {split m[/]} @multi_cols_keys;
+  }
+
+  # fields that should not be updatable
+  if (my $noupd = delete $req_data->{_noupd}) {
+    $data->{noupd}{$_} = 1 foreach split qr[/], $noupd;
+  }
+
+  # initial values for the form
+  $data->{init_form} = $self->_encode_json($req_data);
+
+  return $data;
+}
 
 
 sub delete {
