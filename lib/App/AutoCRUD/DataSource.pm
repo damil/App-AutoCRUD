@@ -9,7 +9,7 @@ use DBI;
 use Clone           qw/clone/;
 use List::MoreUtils qw/part/;
 use Scalar::Does    qw/does/;
-use SQL::Abstract::FromQuery 0.05;
+use SQL::Abstract::FromQuery 0.08;
 
 use namespace::clean -except => 'meta';
 

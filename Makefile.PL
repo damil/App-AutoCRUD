@@ -56,7 +56,7 @@ requires (
   'Plack'                          => 0,
   'Scalar::Does'                   => 0,
   'Scalar::Util'                   => 0,
-  'SQL::Abstract::FromQuery'       => 0.05,
+  'SQL::Abstract::FromQuery'       => 0.08,
   'Template'                       => 0,
   'Time::HiRes'                    => 0,
   'Try::Tiny'                      => 0,
