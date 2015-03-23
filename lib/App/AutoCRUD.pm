@@ -792,6 +792,17 @@ of the application classes.
 Checks if the given class is already loaded in memory or not.
 
 
+=head1 CAVEATS
+
+In the current implementation, the slash charater (C<'/'>) is interpreted
+as a separator for primary keys over multiple columns. This means that
+an embedded slash in a column name or in the value of a primary key
+could yield unexpected results. This is definitely something to be
+improved in a future versions, but at the moment I still don't know how
+it will be solved.
+
+
+
 =head1 ACKNOWLEDGEMENTS
 
 Some design aspects were borrowed from

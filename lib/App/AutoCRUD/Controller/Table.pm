@@ -138,7 +138,7 @@ sub _add_links_to_other_pages {
 sub id {
   my ($self, $table) = @_;
 
-  my $data = $self->descr($table);
+  my $data     = $self->descr($table);
 
   my $pk       = $data->{primary_key};
   my @vals     = $self->context->extract_path_segments(scalar(@$pk));
@@ -153,8 +153,7 @@ sub id {
 
   # links
   my %where_pk = map { ("where_pk.$_" => $criteria{$_}) } keys %criteria;
-  $data->{delete_args} = $self->_query_string(%where_pk);
-  $data->{update_args} = $self->_query_string(%where_pk);
+  $data->{where_pk} = $self->_query_string(%where_pk);
 
   return $data;
 }
@@ -191,7 +190,7 @@ sub update {
   my $req_data   = $context->req_data;
   my $datasource = $context->datasource;
 
-  if ($context->req->method eq 'POST') {
+  if ($context->req->method eq 'POST') { # POST => perform the update
     # columns to update
     my $to_set = $req_data->{set} || {};
     foreach my $key (keys %$to_set) {
@@ -201,7 +200,7 @@ sub update {
     }
     keys %$to_set or die "nothing to update";
 
-    # filtering criteria
+    # build filtering criteria
     my $where  = $req_data->{where} or die "update without any '-where' clause";
     my $criteria = $datasource->query_parser->parse($where);
     $criteria and keys %$criteria or die "update without any '-where' criteria";
@@ -217,27 +216,44 @@ sub update {
     my $query_string = $self->_query_string(%$where, -message => $message);
     $self->redirect("list?$query_string");
   }
-  else {
-    # display the update form
+  else {                                  # GET => display the update form
+    # prepare data for the update form
     my $data = $self->descr($table);
     if (my $where_pk  = delete $req_data->{where_pk}) {
-      $data->{where_pk} = $where_pk;
+      # we got the primary key of one single record
+      $data->{where_pk}  = $where_pk;
       $req_data->{where} = $where_pk;
 
+      # fetch current values so that we can display them on page
       my $criteria = $datasource->query_parser->parse($where_pk);
       my $db_table = $datasource->schema->db_table($table);
       $req_data->{curr} = $db_table->select(-where     => $criteria,
                                             -result_as => 'firstrow');
-    };
+    }
+    else {
+      # in case of multi-columns keys, the form needs to add special fields
+      # and to ignore regular fields for those columns
+      my $where = $req_data->{where} || {};
+      my @multi_cols_keys = grep m[/], keys %$where;
+      $data->{multi_cols_keys} = \@multi_cols_keys;
+      $data->{ignore_col}{$_} = 1 foreach map {split m[/]} @multi_cols_keys;
+    }
+
+    # fields that should not be updatable
     if (my $noupd = delete $req_data->{_noupd}) {
-      # fields that should not be updatable
       $data->{noupd}{$_} = 1 foreach split qr[/], $noupd;
     }
+
+    # initial values for the form
     $data->{init_form} = $self->_encode_json($req_data);
 
     return $data;
   }
 }
+
+
+
+
 
 
 sub delete {

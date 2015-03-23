@@ -45,7 +45,8 @@
        if (box.checked) vals.push(encodeURIComponent(box.value));
     });
     if (vals.length > 0) {
-      a_element.href += "where.[% pk_name | utf8_url %]=" + vals.join(",");
+      a_element.href += "where." + encodeURIComponent("[% pk_name %]") 
+                                 + "=" + vals.join(",");
       return true;
     }
     else {
@@ -84,12 +85,12 @@
       check/uncheck all records in page
         <input type=checkbox onchange="propagate_checkbox(this)"> 
       <br>
-      <a href="update?_noupd=[% pk_name | utf8_url %]&" 
+      <a href="update?_noupd=[% pk_name | uri %]&" 
          onclick="return add_checkboxes(this)">update</a> |
       <a href="delete?" 
          onclick="return add_checkboxes(this)">delete</a> checked records
       <br>
-      <a href="update?_noupd=[% pk_name | utf8_url %]&[% data.where_args | utf8_url %]">update</a> |
+      <a href="update?_noupd=[% pk_name | uri %]&[% data.where_args | utf8_url %]">update</a> |
       <a href="delete?[% data.where_args | utf8_url %]">delete</a> whole result set
   [% END; # IF data.rows.size > 0 %]
   <br>

@@ -27,6 +27,8 @@ has 'query_parser' => (is => 'ro', isa => 'SQL::Abstract::FromQuery',
                        builder => '_query_parser', lazy => 1);
 has 'tablegroups'  => (is => 'ro', isa => 'ArrayRef',
                        builder => '_tablegroups', lazy => 1);
+has 'multicols_sep'=> (is => 'ro', isa => 'Str', default => '/');
+
 
 # indirectly generated through the _schema builder method
 has 'generated_schema' => (is => 'ro', isa => 'Str', init_arg => undef);
@@ -97,12 +99,8 @@ sub _schema {
 
     if (! $self->app->is_class_loaded($schema_class)) {
       # build a schema generator from the DBI connection
-
       my $dbh = $self->dbh;
-
       require DBIx::DataModel::Schema::Generator;
-
-
       my $generator = DBIx::DataModel::Schema::Generator->new(
         -schema => $schema_class,
        );
@@ -126,7 +124,9 @@ sub _schema {
 sub _query_parser {
   my $self = shift;
 
-  return SQL::Abstract::FromQuery->new;
+  my $sep  = $self->multicols_sep;
+  my @args = $sep ? (-multicols_sep => $sep) : ();
+  return SQL::Abstract::FromQuery->new(@args);
 }
 
 
@@ -293,6 +293,8 @@ sub colgroups {
   $self->{colgroups}{$table} = $colgroups;
   return $colgroups;
 }
+
+
 
 
 sub _columns_from_Oracle_synonym {

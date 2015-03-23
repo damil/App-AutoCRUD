@@ -5,7 +5,7 @@
   .actions       { float: right; text-align: right; background-color: LightCyan;
                    margin-left: 1em; margin-top: 1em; padding-left: 0.5em }
   .readonly      { background-color: lightgrey }
-  .where         { width: 4em; text-align: right;  }
+  .where         { display: inline-block; width: 4em; text-align: right}
   .focused_label { border-bottom: 1px dashed blue }
 </style>
 
@@ -44,7 +44,9 @@
     var node = tn_tree.enclosingNode(event.element());
     return node ? tn_tree.label(node) : undefined;
   }
-    
+
+  // TODO : clicking on a column name should set focus to its "set" input
+
 </script>
 [% WRAPPER linked_script %][% base %]static/js/autocrud_utils.js[% END %]
 
@@ -65,13 +67,34 @@
          IF ! data.where_pk %]>
 
   <div id="TN_tree">
-    [% USE group_iter = iterator(data.colgroups) %]
-    [% FOREACH group IN group_iter %]
+
+    [% FOREACH multi_cols_key IN data.multi_cols_keys %]
+    <div class="TN_node">
+      <span class="TN_label groupname">Multi-column keys</span>
+      <div class="TN_content">
+        <div class="TN_leaf">
+          <span class="TN_label colname">[% multi_cols_key %]</span>
+          <span class="after_label">
+             set <input name="set.[% multi_cols_key %]" size=20
+                    readonly class="readonly">
+             <span class="where">[%  seen_where ? "and" : "where";
+                                     SET seen_where = 1; %]</span>
+             <input name="where.[% multi_cols_key %]" size=10
+                    readonly class="readonly">
+          </span>
+        </div>
+      </div>
+    </div>
+    [% END; # FOREACH multi_cols_key IN data.multi_cols_keys %]
+
+
+    [% FOREACH group IN data.colgroups %]
     <div class="TN_node">
       <span class="TN_label groupname">[% group.name %]</span>
       <div class="TN_content">
         [% FOREACH col IN group.columns;
-           SET col_name = col.COLUMN_NAME %]
+           SET col_name = col.COLUMN_NAME;
+           NEXT IF data.ignore_col.$col_name; %]
         <div class="TN_leaf">
 
           <span class="TN_label colname" 
@@ -101,8 +124,9 @@
                              class="readonly" tabindex=-1>)
               [% ELSE;
                  # updating several records, so we show the WHERE criteria %]
-                 <span class="where">[% group_iter.first && loop.first ? "where" : "and" %]</span>
-                    <input name="where.[% col_name %]" size=10>
+                 <span class="where">[%  seen_where ? "and" : "where";
+                                         SET seen_where = 1; %]</span>
+                 <input name="where.[% col_name %]" size=10>
               [% END; # IF data.where_pk %]
             [% END; # IF data.where_pk.defined(col_name) %]
           </span>
@@ -112,7 +136,7 @@
         [% END; # FOREACH col IN group.columns %]
       </div>
     </div>
-    [% END; # FOREACH group IN group_iter %]
+    [% END; # FOREACH group IN data.colgroups %]
   </div>
 
   <input type="submit">
