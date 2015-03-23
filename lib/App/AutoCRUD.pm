@@ -921,8 +921,9 @@ L<http://www.codeplex.com/ChinookDatabase>.
 
   - add a .tsv View
 
-  - 
-
+  - multicolumns : if there is an association over a multicolumns key,
+     it is not displayed as a hyperlink in /list. To do so, we would need
+     to add a line in the display, corresponding to the multicolumn.
 
 =head1 LICENSE AND COPYRIGHT
 
