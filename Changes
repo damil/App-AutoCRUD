@@ -1,7 +1,7 @@
 Revision history for Plack-App-AutoCRUD
 
-
-  - multicolum keys support is now in SQL::Abstract::More v1.27
+0.11 06.04.2015
+  - support for multicolum keys is now in SQL::Abstract::More v1.27
 
 0.10 23.03.2015
   - support for multicolum keys
