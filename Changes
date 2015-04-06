@@ -1,6 +1,8 @@
 Revision history for Plack-App-AutoCRUD
 
 
+  - multicolum keys support is now in SQL::Abstract::More v1.27
+
 0.10 23.03.2015
   - support for multicolum keys
   - the clone form gets populated from database, no longer from URL

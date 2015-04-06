@@ -9,7 +9,7 @@ use DBI;
 use Clone           qw/clone/;
 use List::MoreUtils qw/part/;
 use Scalar::Does    qw/does/;
-use SQL::Abstract::FromQuery 0.08;
+use SQL::Abstract::FromQuery 0.10;
 
 use namespace::clean -except => 'meta';
 
@@ -27,8 +27,6 @@ has 'query_parser' => (is => 'ro', isa => 'SQL::Abstract::FromQuery',
                        builder => '_query_parser', lazy => 1);
 has 'tablegroups'  => (is => 'ro', isa => 'ArrayRef',
                        builder => '_tablegroups', lazy => 1);
-has 'multicols_sep'=> (is => 'ro', isa => 'Str', default => '/');
-
 
 # indirectly generated through the _schema builder method
 has 'generated_schema' => (is => 'ro', isa => 'Str', init_arg => undef);
@@ -124,9 +122,7 @@ sub _schema {
 sub _query_parser {
   my $self = shift;
 
-  my $sep  = $self->multicols_sep;
-  my @args = $sep ? (-multicols_sep => $sep) : ();
-  return SQL::Abstract::FromQuery->new(@args);
+  return SQL::Abstract::FromQuery->new;
 }
 
 

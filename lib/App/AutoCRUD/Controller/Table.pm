@@ -6,7 +6,7 @@ use warnings;
 
 use Moose;
 extends 'App::AutoCRUD::Controller';
-use SQL::Abstract::More;
+use SQL::Abstract::More 1.27;
 use List::MoreUtils            qw/mesh firstval/;
 use JSON::MaybeXS ();
 use URI;
@@ -436,7 +436,7 @@ sub _encode_json {
 sub _mark_multicols_keys {
   my ($self, $data) = @_;
 
-  if (my $sep = $self->datasource->multicols_sep) {
+  if (my $sep = $self->datasource->schema->sql_abstract->multicols_sep) {
     # in case of multi-columns keys, the form needs to add special fields
     # and to ignore regular fields for those columns
     my $where = $self->context->req_data->{where} || {};
