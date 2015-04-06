@@ -891,8 +891,6 @@ L<http://www.codeplex.com/ChinookDatabase>.
 
   - quoting problem (FromQuery: "J&B")
 
-  - app-specific exception handling instead of Plack error messages
-
   - readonly fields: tabindex -1 (can be done by CSS?)
     in fact, current values should NOT be input fields, but plain SPANs
 
@@ -900,18 +898,9 @@ L<http://www.codeplex.com/ChinookDatabase>.
   - Update form, focus problem (focus in field should deactivate TreeNav)
   - add insert link in table descr
 
-  - export Excel : use column groups
-  - export Excel : figer les volets
-
   - deal with Favicon.ico
 
   - declare in http://www.sqlite.org/cvstrac/wiki?p=ManagementTools
-
-  - bulk update : should display the "update" SQL
-  - bulk update : bad alignment in form ('where' / 'and')
-  - bulk update : maybe would need special authorization
-
-  - add a .tsv View
 
   - multicolumns : if there is an association over a multicolumns key,
      it is not displayed as a hyperlink in /list. To do so, we would need
