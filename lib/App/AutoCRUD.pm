@@ -65,7 +65,7 @@ sub _datasources {
   my $source_class   = $self->find_class('DataSource');
   my $config_sources = $self->config('datasources');
   return {map {($_ => $source_class->new(name => $_, app => $self))}
-              keys %$config_sources};
+              sort keys %$config_sources};
 }
 
 sub _share_paths {
@@ -871,16 +871,10 @@ L<http://www.codeplex.com/ChinookDatabase>.
 
 =head1 TODO
 
-
-
- - check multiple updates on CLE_PROC (space OK ?)
-
  - column properties
     - noinsert, noupdate, nosearch, etc.
 
  - edit: select or autocompleter for foreign keys
-
- - descr: highlight primary key
 
  - internationalisation
     - 
@@ -898,8 +892,6 @@ L<http://www.codeplex.com/ChinookDatabase>.
   - quoting problem (FromQuery: "J&B")
 
   - app-specific exception handling instead of Plack error messages
-
-  - datasources in homepage should be ordered
 
   - readonly fields: tabindex -1 (can be done by CSS?)
     in fact, current values should NOT be input fields, but plain SPANs
