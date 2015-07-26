@@ -9,6 +9,7 @@ use DBI;
 use Clone           qw/clone/;
 use List::MoreUtils qw/part/;
 use Scalar::Does    qw/does/;
+use Data::Reach     qw/reach/;
 use SQL::Abstract::FromQuery 0.10;
 
 use namespace::clean -except => 'meta';
@@ -192,7 +193,7 @@ sub _config {
 
 sub config {
   my ($self, @path) = @_;
-  return App::AutoCRUD::_node_from_path($self->config_data, @path);
+  return reach $self->config_data, @path;
 }
 
 

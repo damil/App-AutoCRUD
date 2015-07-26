@@ -15,6 +15,7 @@ use Scalar::Does      qw/does/;
 use Clone             qw/clone/;
 use Try::Tiny;
 use YAML::Any         qw/Dump/;
+use Data::Reach       qw/reach/;
 
 use namespace::clean -except => 'meta';
 
@@ -173,7 +174,7 @@ sub respond { # request dispatcher (see L<Plack::Component>)
 sub config {
   my $self = shift;
   my $config = $self->{config};
-  return _node_from_path($config, @_);
+  return reach $config, @_;
 }
 
 
@@ -254,27 +255,6 @@ $msg
 </body>
 </html>
 __EOHTML__
-}
-
-
-#======================================================================
-# AUXILIARY FUNCTIONS
-#======================================================================
-
-
-# convenience function for walking through nested hashrefs/arrayrefs
-sub _node_from_path { 
-  my ($root, $path0, @path) = @_;
-  no warnings 'uninitialized';
-
-  return undef                                   if !defined $path0 && @path;
-  return $root                                   if !defined $path0;
-  return undef                                   if !defined $root;
-  return _node_from_path($root->{$path0}, @path) if does($root, 'HASH');
-  return _node_from_path($root->[$path0], @path) if does($root, 'ARRAY');
-
-  # otherwise
-  croak "_node_from_path: incorrect root/path";
 }
 
 
