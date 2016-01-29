@@ -20,7 +20,7 @@ use Data::Reach       qw/reach/;
 use namespace::clean -except => 'meta';
 
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 has 'config'      => (is => 'bare', isa => 'HashRef', required => 1);
 has 'dir'         => (is => 'ro',   isa => 'Str',

@@ -1,5 +1,8 @@
 Revision history for Plack-App-AutoCRUD
 
+0.12 29.01.2016
+  - RT#111511 : Missing last line in Excel view.
+
 0.11 06.04.2015
   - support for multicolum keys is now in SQL::Abstract::More v1.27
 
