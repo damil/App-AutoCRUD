@@ -138,6 +138,9 @@ sub _tablegroups {
                                 $self->config(qw/dbh db_type/) || 'TABLE',
                                );
   my $tables = $sth->fetchall_hashref('TABLE_NAME');
+  
+  my $filter_include = $self->config(qw/filters include/);
+  my $filter_exclude = $self->config(qw/filters exclude/);  
 
   # merge with descriptions from config
   foreach my $table (keys %$tables) {
@@ -158,6 +161,10 @@ sub _tablegroups {
 
   # deal with remaining tables (
   if (my @other_tables = sort keys %$tables) {
+    
+    # Filter out based on the regexps in filters include & exclude
+    @other_tables = grep { $_ =~ /$filter_include/ } @other_tables if ($filter_include);
+    @other_tables = grep { $_ !~ /$filter_exclude/ } @other_tables if ($filter_exclude);
     push @$tablegroups, {
       name   => 'Unclassified tables', 
       descr  => 'Present in database but unlisted in config',
@@ -184,6 +191,7 @@ sub _config {
 
     # copy structure into datasource config
     $config->{$_} = $struct_config->{$_} foreach keys %$struct_config;
+        
   }
 
   return $config;
