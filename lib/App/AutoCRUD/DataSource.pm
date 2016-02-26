@@ -148,8 +148,12 @@ sub _tablegroups {
   # grouping: merge with table info from config
   my $tablegroups = clone $self->config('tablegroups') || [];
   foreach my $group (@$tablegroups) {
-    $group->{tables} 
-      = [ grep {$_} map {delete $tables->{$_}} @{$group->{tables}} ];
+    # tables declared in this group are removed from the global %$tables ..
+    my @declared_table_names = @{$group->{tables}};
+    my @extracted_tables     = map {delete $tables->{$_}} @declared_table_names;
+
+    # .. and their full definitions take place of the declared names
+    $group->{tables} = [ grep {$_} @extracted_tables ];
   }
 
   # deal with remaining tables (
