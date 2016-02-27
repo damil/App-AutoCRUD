@@ -401,6 +401,9 @@ the test file F<t/00_autocrud.t> :
     sqlite_unicode => 1,
   };
   my $config = {
+    app => {
+      name => "SomeName"
+    },
     datasources => {
       SomeDatabase => {
         dbh => {
