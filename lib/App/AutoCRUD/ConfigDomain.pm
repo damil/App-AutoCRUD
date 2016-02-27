@@ -38,6 +38,9 @@ sub DataSource {
     schema_class => String(-optional => 1),
     tablegroups  => List(-all => Tablegroup(), -optional => 1),
     tables       => Struct(-values => List(-all => Table()), -optional => 1),
+    filters      => Struct(-optional => 1,
+                           -fields => [include => String(-optional => 1),
+                                       exclude => String(-optional => 1)]),
    );
 }
 
@@ -287,11 +290,28 @@ information and are not immediately useful to the user.
 
 The ordered list of tables within this group.
 
+=item filters
+
+Allows to hide some tables by using regexes, this only hides tables which are NOT
+explicitely defined in the configuration.
+
+They are hidden from display, but there is absolutely no acces restriction
+(access is still possible by using the right URL).
+
+=over
+
+=item include
+
+This is evaluated as a regex and only shows tables who have matching names.
+
+=item exclude 
+
+This is evaluated as a regex and hides tables who have matching names.
+
+Exclude takes precedence over include.
 
 =back
 
-
-=back
 
 
 
