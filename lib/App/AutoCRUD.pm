@@ -725,6 +725,12 @@ as second resort, when components are not found in the application instance
 directory.
 
 
+=head2 readonly
+
+A boolean to restrict actions available to only read from the database.
+The value of readonly boolean is set in YAML configuration file.
+
+
 =head1 METHODS
 
 =head2 new
@@ -894,7 +900,7 @@ L<http://www.codeplex.com/ChinookDatabase>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2014, 2015 Laurent Dami.
+Copyright 2014-2016 Laurent Dami.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the the Artistic License (2.0). You may obtain a
