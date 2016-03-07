@@ -35,6 +35,8 @@ has 'datasources' => (is      => 'ro',
 has 'share_paths' => (is      => 'ro', 
                       isa     => 'ArrayRef',
                       builder => '_share_paths', lazy => 1, auto_deref => 1);
+has 'readonly'    => (is      => 'ro', isa => 'Bool',
+                      builder => '_readonly', lazy => 1);
 
 
 
@@ -59,6 +61,10 @@ sub _title {
   return $self->config(qw/app title/) || 'Welcome to the wonders of AutoCRUD';
 }
 
+sub _readonly {
+  my $self = shift;
+  return $self->config(qw/app readonly/);  
+}
 
 sub _datasources {
   my $self = shift;
