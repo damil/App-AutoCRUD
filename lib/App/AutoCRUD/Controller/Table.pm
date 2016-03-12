@@ -185,6 +185,8 @@ sub search {
 sub update {
   my ($self, $table) = @_;
 
+  $self->_check_canmodify;
+
   if ($self->context->req->method eq 'POST') {
     $self->_do_update_data($table);
   }
@@ -193,9 +195,18 @@ sub update {
   }
 }
 
+sub _check_canmodify {
+  my ($self) = @_;
+  
+  if ($self->context->app->readonly) {
+    die 'readonly mode';    
+  }
+}
 
 sub _do_update_data {
   my ($self, $table) = @_;
+
+  $self->_check_canmodify;
 
   my $context    = $self->context;
   my $req_data   = $context->req_data;
@@ -229,6 +240,8 @@ sub _do_update_data {
 
 sub _display_update_form {
   my ($self, $table) = @_;
+
+  $self->_check_canmodify;
 
   my $context    = $self->context;
   my $req_data   = $context->req_data;
@@ -265,6 +278,8 @@ sub _display_update_form {
 
 sub delete {
   my ($self, $table) = @_;
+
+  $self->_check_canmodify;
 
   my $context    = $self->context;
   my $req_data   = $context->req_data;
@@ -312,6 +327,8 @@ sub delete {
 sub clone {
   my ($self, $table) = @_;
 
+  $self->_check_canmodify;
+
   my $context = $self->context;
   $context->req->method eq 'GET'
     or die "the /clone URL only accepts GET requests";
@@ -345,6 +362,8 @@ sub clone {
 
 sub insert {
   my ($self, $table) = @_;
+
+  $self->_check_canmodify;
 
   my $context    = $self->context;
   my $req_data   = $context->req_data;
