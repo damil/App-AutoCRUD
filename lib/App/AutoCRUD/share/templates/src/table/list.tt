@@ -121,7 +121,7 @@
 
 [% IF data.rows.size > 0 %]
 
-  <form id="list_form" method="GET" action="update">
+  [% WRAPPER form_unless_readonly; %]
 
     <div id="TN_tree" onPing="followLink">
       [% FOREACH row IN data.rows;
@@ -147,10 +147,22 @@
       [% END; # FOREACH row IN data.rows %]
     </div>
 
-  </form>
+  [% END; # WRAPPER form_unless_readonly; %]
 
   <div class="actions">
     [% INCLUDE page_links %]
   </div>
 
 [% END; # IF data.rows.size > 0 %]
+
+
+[% BLOCK form_unless_readonly;
+     IF c.app.readonly;
+       content;
+     ELSE;
+       "<form id='list_form' method='GET' action='update'>\n";
+       content;
+       "</form>\n";
+     END; # IF
+   END; # BLOCK %]
+  

@@ -8,9 +8,10 @@ use Data::Domain 1.05 qw/:all/;
 sub Config {
   Struct(
      app => Struct(
-       name    => String(-optional => 1),
-       title   => String(-optional => 1),
-       default => Struct(-optional => 1),
+       name     => String(-optional => 1),
+       title    => String(-optional => 1),
+       default  => Struct(-optional => 1),
+       readonly => Whatever, # used as boolean
       ),
      datasources => Struct(
        -values => List(-min_size => 1,
@@ -152,6 +153,7 @@ to check if the configuration is correct.
   <app> : {
     name        => <string>,
     title       => <string>,
+    readonly    => <whatever>, # used as boolean
     default     => <hashref>,
   }
 
@@ -184,6 +186,12 @@ Short name (will be displayed in most pages).
 =item title
 
 Long name (will be displayed in home page).
+
+=item readonly
+
+Boolean flag; if true, data mutation operations will be forbidden
+(i.e. no insert, update or delete).
+
 
 =item default
 

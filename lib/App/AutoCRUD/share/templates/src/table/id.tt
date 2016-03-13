@@ -31,9 +31,11 @@
   <a href="[% table_url %]/search">search</a> this table
   <br>
   <br>
-  <a href="[% table_url %]/update?[% data.where_pk | utf8_url %]">update</a> |
-  <a href="[% table_url %]/delete?[% data.where_pk | utf8_url %]">delete</a> |
-  <a href="[% table_url %]/clone/[% data.pk_val | utf8_url %]">clone</a> this record
+  [% UNLESS c.app.readonly %]
+    <a href="[% table_url %]/update?[% data.where_pk | utf8_url %]">update</a> |
+    <a href="[% table_url %]/delete?[% data.where_pk | utf8_url %]">delete</a> |
+    <a href="[% table_url %]/clone/[% data.pk_val | utf8_url %]">clone</a> this record
+  [% END %]
 </div>
 
 <h1>Record from [% data.table %]</h1>
