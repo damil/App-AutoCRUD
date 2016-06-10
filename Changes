@@ -1,5 +1,8 @@
 Revision history for Plack-App-AutoCRUD
 
+0.13 08.06.2016
+  - Added a readonly mode
+
 0.12 29.01.2016
   - RT#111511 : Missing last line in Excel view.
 
