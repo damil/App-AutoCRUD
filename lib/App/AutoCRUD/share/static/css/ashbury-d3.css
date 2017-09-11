@@ -1,0 +1,81 @@
+#wheel .spinner {
+    height: 120px;
+    width: 120px;
+    margin: 120px auto;
+    display: block;
+    background-image: url('/static/img/spinner.gif');
+    background-size:120px 120px;
+    background-repeat:no-repeat;
+}
+
+#wheel .nodata {
+  text-align:center;
+  margin-top: 40px;
+}
+
+.prereq-graph {
+  margin: 0 auto;
+}
+
+.prereq-graph-legend {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+}
+.prereq-graph-legend .target {
+  color: #1f77b4;
+}
+
+.prereq-graph-legend .depends-on {
+  color: #d62728;
+}
+
+.prereq-graph-legend .required-by {
+  color: #2ca02c;
+}
+
+svg {
+  cursor: move;
+}
+
+path.arc {
+  fill: #fff;
+}
+
+.node {
+  font-size: 13px;
+}
+
+.node:hover {
+  fill: #1f77b4;
+  font-weight: 700;
+}
+
+.link {
+  fill: none;
+  stroke: #1f77b4;
+  stroke-opacity: .4;
+  pointer-events: none;
+}
+
+.link.source, .link.target {
+  stroke-opacity: 1;
+  stroke-width: 2px;
+}
+
+.node.target {
+  fill: #d62728 !important;
+  font-weight: 700;
+}
+
+.link.source {
+  stroke: #d62728;
+}
+
+.node.source {
+  fill: #2ca02c;
+  font-weight: 700;
+}
+
+.link.target {
+  stroke: #2ca02c;
+}

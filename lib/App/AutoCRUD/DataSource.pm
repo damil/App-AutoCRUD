@@ -320,6 +320,59 @@ sub _meta_table {
 
 
 
+
+sub relationships {
+  my ($self) = @_;
+
+  my @tables = map {$_->{TABLE_NAME}}
+               map {@{$_->{tables}}} @{$self->tablegroups};
+
+  my %relationships;
+  foreach my $table (@tables) {
+    my @columns = map {@{$_->{columns}}} @{$self->colgroups($table)};
+    #    foreach my $column (grep {$_->{is_pk}}@columns) {
+    foreach my $column (@columns) {
+      foreach my $path (@{$column->{paths} || []}) {
+        push @{$relationships{$table}}, $path->{to_table};
+      }
+    }
+  }
+  
+  return [map { {name => $_, prereqs => $relationships{$_}} }
+              sort keys %relationships];
+}
+
+
+sub relationships4 {
+  my ($self) = @_;
+
+  my @tables = map {$_->{TABLE_NAME}}
+               map {@{$_->{tables}}} @{$self->tablegroups};
+
+  my $n_tables = @tables;
+  my @matrix = map { [ (0) x $n_tables ] } 1..$n_tables;
+
+  my $ix = 0;
+  my %ix_table = map {($_ => $ix++)} @tables;
+
+  foreach my $table (@tables) {
+    my $row = $ix_table{$table};
+    my @columns = map {@{$_->{columns}}} @{$self->colgroups($table)};
+    #    foreach my $column (grep {$_->{is_pk}}@columns) {
+    foreach my $column (@columns) {
+      foreach my $path (@{$column->{paths} || []}) {
+        my $col = $ix_table{$path->{to_table}};
+        $matrix[$row][$col] = 1;
+      }
+    }
+  }
+
+  return { matrix => \@matrix, nodes => \@tables};
+}
+
+
+
+
 1;
 
 __END__

@@ -40,6 +40,38 @@ sub tablegroups {
   return $context->datasource->tablegroups;
 }
 
+
+sub relationships {
+  my ($self) = @_;
+
+  my $context = $self->context;
+  return $context->datasource->relationships;
+}
+
+sub rel_wheel {
+  my ($self) = @_;
+
+  my $context = $self->context;
+  $context->set_template("schema/rel_wheel.tt");
+}
+
+sub rel_wheel4 {
+  my ($self) = @_;
+
+  my $context = $self->context;
+  $context->set_template("schema/rel_wheel4.tt");
+
+  return $context->datasource->relationships4;
+}
+
+sub relationships4 {
+  my ($self) = @_;
+
+  my $context = $self->context;
+  return $context->datasource->relationships4;
+}
+
+
 sub perl_code {
   my ($self) = @_;
 
