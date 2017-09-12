@@ -69,11 +69,13 @@ function build_wheel(data) {
   // dimensions
   var margin = {left:90, top:90, right:90, bottom:90},
       outerSize = 800,
-    width =  outerSize - margin.left - margin.right, // more flexibility: Math.min(window.innerWidth, 1000)
-    height =  outerSize - margin.top - margin.bottom, // same: Math.min(window.innerWidth, 1000)
-    innerRadius = Math.min(width, height) * .39,
-    outerRadius = innerRadius * 1.1,
-    opacityDefault = 0.7;
+      width =  outerSize - margin.left - margin.right,
+        // more flexibility: Math.min(window.innerWidth, 1000)
+      height =  outerSize - margin.top - margin.bottom,
+        // same: Math.min(window.innerWidth, 1000)
+      innerRadius = Math.min(width, height) * .39,
+      outerRadius = innerRadius * 1.1,
+      opacityDefault = 0.7;
 
 
   // create scale and layout functions
@@ -99,33 +101,31 @@ function build_wheel(data) {
     .datum(chord(data.matrix));
 
 
-  //Defines each "group" in the chord diagram
-  var group = g.append("g")
-    .attr("class", "groups")
 
+  // draw outer arcs
+  var outerArcs = g.selectAll("g.group")
+    .data(function(chords) { return chords.groups; })
+    .enter().append("g")
+    .attr("class", "group")
     .on("mouseover", fade(.1))
     .on("mouseout", fade(opacityDefault))
-
-    .selectAll("g")
-    .data(function(chords) { return chords.groups; })
-    .enter().append("g");
+    ;
 
 
-  //Draw the radial arcs for each group
-  group.append("path")
+  outerArcs.append("path")
     .style("fill", function(d) { return color(d.index); })
     .style("stroke", function(d) { return d3.rgb(color(d.index)).darker(); })
     .attr("d", arc);
 
 
-  // ajout d'un titre pour chaque groupe
-  group.append("title").text(function(d) {
+  // title attribute
+  outerArcs.append("title").text(function(d) {
     return data.nodes[d.index]; // nom de la table 
     });
 
 
-  //Add labels to each group
-  group.append("text")
+  // append label names on the outside
+  outerArcs.append("text")
       .attr("dy", ".35em") //width
       .attr("class", "grp-label")
       .attr("transform", function(d,i) { //angle
