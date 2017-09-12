@@ -27,10 +27,12 @@
 /* 
 
    TODO
-   - radius change
    - labels 90°
-   - add fade
-   - handle for scaling
+   - handle for scaling or make responsive to window size
+   - table groups : sort tables differently, add arcs for tgroups
+   - labels : display join details (col names)
+   - click on table : display full list of columns + hyperlink on search form
+   - min size for tables without re
 
     DOC : http://devdocs.io/d3~4
 
@@ -82,7 +84,8 @@ function build_wheel(data) {
   var color = d3.scaleOrdinal(d3.schemeCategory20);
   var chord = d3.chord()
     .padAngle(0.03)
-    .sortChords(d3.descending);
+  //    .sortChords(d3.descending)
+  ;
   var arc = d3.arc()
     .innerRadius(innerRadius*1.01)
     .outerRadius(outerRadius);
@@ -107,8 +110,8 @@ function build_wheel(data) {
     .data(function(chords) { return chords.groups; })
     .enter().append("g")
     .attr("class", "group")
-    .on("mouseover", fade(.1))
-    .on("mouseout", fade(opacityDefault))
+    .on("mouseover", fade(svg, .1))
+    .on("mouseout", fade(svg, opacityDefault))
     ;
 
 
@@ -175,17 +178,16 @@ function build_wheel(data) {
 
 //----------------------------------------------------------------------------
 //Returns an event handler for fading a given chord group.
-function fade(opacity) {
+function fade(svg, opacity) {
   return function(d,i) {
     svg.selectAll("path.chord")
         .filter(function(d) { return d.source.index != i && d.target.index != i; })
     .transition()
         .style("opacity", opacity);
   };
-}//fade
+}
 
 
-//----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 
@@ -264,7 +266,53 @@ function updateNodes(svg, name, value) {
     };
 }
 
+/* TIPS
 
+
+
+d3.select("div#chartId")
+   .append("div")
+   .classed("svg-container", true) //container class to make it responsive
+   .append("svg")
+   //responsive SVG needs these 2 attributes and no width and height attr
+   .attr("preserveAspectRatio", "xMinYMin meet")
+   .attr("viewBox", "0 0 600 400")
+   //class to make it responsive
+   .classed("svg-content-responsive", true); 
+
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; // aspect ratio 
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+    left: 0;
+}
+
+http://thenewcode.com/744/Make-SVG-Responsive
+
+http://soqr.fr/testsvg/embed-svg-liquid-layout-responsive-web-design.php
+
+
+
+https://coderwall.com/p/psogia/simplest-way-to-add-zoom-pan-on-d3-js
+
+var svg = d3.select("body")
+ .append("svg")
+ .attr("width", "100%")
+ .attr("height", "100%")
+ .call(d3.zoom().on("zoom", function () {
+    svg.attr("transform", d3.event.transform)
+ }))
+ .append("g")
+
+*/
 
 
 
