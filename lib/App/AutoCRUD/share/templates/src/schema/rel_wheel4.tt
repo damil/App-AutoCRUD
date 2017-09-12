@@ -16,6 +16,23 @@
   text-anchor: middle;
 }
 
+
+
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; // aspect ratio 
+  vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+}
+
+
 </style>
 
 
@@ -96,9 +113,30 @@ function build_wheel(data) {
 
   // create SVG
   div = d3.select("#wheel");
+
+    // lines below make responsive ... but then rotation no longer works :-(
+    // .append("div")
+    // .classed("svg-container", true); //container class to make it responsive
+
+
   svg = div.append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+
+    // lines below add zoom support .. but it conflicts with rotation
+ //   .call(d3.zoom().on("zoom", function () {
+ //    svg.attr("transform", d3.event.transform)
+ // }))
+;
+
+   // // see http://thenewcode.com/744/Make-SVG-Responsive
+   // //responsive SVG needs these 2 attributes and no width and height attr
+   // .attr("preserveAspectRatio", "xMinYMin meet")
+   // .attr("viewBox", "0 0 1000 1000") // bigger numbers make a smaller svg
+   // //class to make it responsive
+   // .classed("svg-content-responsive", true); 
+
+
   var g = svg.append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
     .datum(chord(data.matrix));
@@ -144,7 +182,7 @@ function build_wheel(data) {
       
 
 
-//Draw the ribbons that go from group to group
+  //Draw the ribbons that go from group to group
   var ribbons =  g.append("g")
     .attr("class", "ribbons")
     .selectAll("path")
@@ -160,7 +198,8 @@ function build_wheel(data) {
   // tooltip pour chaque ruban
   ribbons.append("title").
     text(function(d){
-      return data.nodes[d.source.index] + " => " + data.nodes[d.target.index];
+//      return data.nodes[d.source.index] + " => " + data.nodes[d.target.index];
+      return data.rel_descr[d.source.index][d.target.index] || "no descr";
     });
 
 
@@ -209,7 +248,6 @@ function mousemove(svg, r) {
     if (rotate > 360) rotate -= 360;
     else if (rotate < 0) rotate += 360;
 
- //   svg.attr("transform", "translate(" + r + "," + r + ")rotate(" + rotate + ")");
    svg.attr("transform", "rotate(" + rotate + ")");
 
     m0 = m1;
@@ -267,38 +305,6 @@ function updateNodes(svg, name, value) {
 }
 
 /* TIPS
-
-
-
-d3.select("div#chartId")
-   .append("div")
-   .classed("svg-container", true) //container class to make it responsive
-   .append("svg")
-   //responsive SVG needs these 2 attributes and no width and height attr
-   .attr("preserveAspectRatio", "xMinYMin meet")
-   .attr("viewBox", "0 0 600 400")
-   //class to make it responsive
-   .classed("svg-content-responsive", true); 
-
-.svg-container {
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    padding-bottom: 100%; // aspect ratio 
-    vertical-align: top;
-    overflow: hidden;
-}
-.svg-content-responsive {
-    display: inline-block;
-    position: absolute;
-    top: 10px;
-    left: 0;
-}
-
-http://thenewcode.com/744/Make-SVG-Responsive
-
-http://soqr.fr/testsvg/embed-svg-liquid-layout-responsive-web-design.php
-
 
 
 https://coderwall.com/p/psogia/simplest-way-to-add-zoom-pan-on-d3-js

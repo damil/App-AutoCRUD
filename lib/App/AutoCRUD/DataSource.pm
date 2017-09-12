@@ -319,7 +319,7 @@ sub _meta_table {
 
 
 
-sub all_tables {
+sub tables_for_relationships {
   my ($self) = @_;
 
   my @tables = grep { eval {$self->schema->metadm->db_table($_)}} # tmp hack
@@ -334,7 +334,7 @@ sub all_tables {
 sub relationships {
   my ($self) = @_;
 
-  my @tables = $self->all_tables;
+  my @tables = $self->tables_for_relationships;
 
   my %relationships;
   foreach my $table (@tables) {
@@ -355,10 +355,11 @@ sub relationships {
 sub relationships4 {
   my ($self) = @_;
 
-  my @tables = $self->all_tables;
+  my @tables = $self->tables_for_relationships;
 
   my $n_tables = @tables;
-  my @matrix = map { [ (0) x $n_tables ] } 1..$n_tables;
+  my @matrix     = map { [ (0)  x $n_tables ] } 1..$n_tables;
+  my @rel_descr  = map { [ ("") x $n_tables ] } 1..$n_tables;
 
   my $ix = 0;
   my %ix_table = map {($_ => $ix++)} @tables;
@@ -366,16 +367,25 @@ sub relationships4 {
   foreach my $table (@tables) {
     my $row = $ix_table{$table} or next;
     my @columns = map {@{$_->{columns}}} @{$self->colgroups($table)};
-    #    foreach my $column (grep {$_->{is_pk}}@columns) {
     foreach my $column (@columns) {
+
       foreach my $path (@{$column->{paths} || []}) {
+
+        $DB::single = 1 if !$column->{name};
+        
         my $col = $ix_table{$path->{to_table}} or next;
         $matrix[$row][$col] = 1;
+
+        my $descr = "$table.$path->{name}: $column->{COLUMN_NAME} <=> "
+                  . "$path->{to_table}.$path->{foreign_key} \n";
+
+        $rel_descr[$row][$col] .= $descr;
+        $rel_descr[$col][$row] .= $descr unless $col == $row;
       }
     }
   }
 
-  return { matrix => \@matrix, nodes => \@tables};
+  return { matrix => \@matrix, nodes => \@tables, rel_descr => \@rel_descr};
 }
 
 
