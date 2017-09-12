@@ -319,13 +319,22 @@ sub _meta_table {
 
 
 
+sub all_tables {
+  my ($self) = @_;
 
+  my @tables = grep { eval {$self->schema->metadm->db_table($_)}} # tmp hack
+               grep {!/^(WL|CL)/}
+               grep {!/^sqlite/}
+               map {$_->{TABLE_NAME}}
+               map {@{$_->{tables}}} @{$self->tablegroups};
+
+  return @tables;
+}
 
 sub relationships {
   my ($self) = @_;
 
-  my @tables = map {$_->{TABLE_NAME}}
-               map {@{$_->{tables}}} @{$self->tablegroups};
+  my @tables = $self->all_tables;
 
   my %relationships;
   foreach my $table (@tables) {
@@ -346,8 +355,7 @@ sub relationships {
 sub relationships4 {
   my ($self) = @_;
 
-  my @tables = map {$_->{TABLE_NAME}}
-               map {@{$_->{tables}}} @{$self->tablegroups};
+  my @tables = $self->all_tables;
 
   my $n_tables = @tables;
   my @matrix = map { [ (0) x $n_tables ] } 1..$n_tables;
@@ -356,12 +364,12 @@ sub relationships4 {
   my %ix_table = map {($_ => $ix++)} @tables;
 
   foreach my $table (@tables) {
-    my $row = $ix_table{$table};
+    my $row = $ix_table{$table} or next;
     my @columns = map {@{$_->{columns}}} @{$self->colgroups($table)};
     #    foreach my $column (grep {$_->{is_pk}}@columns) {
     foreach my $column (@columns) {
       foreach my $path (@{$column->{paths} || []}) {
-        my $col = $ix_table{$path->{to_table}};
+        my $col = $ix_table{$path->{to_table}} or next;
         $matrix[$row][$col] = 1;
       }
     }

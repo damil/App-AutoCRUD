@@ -16,15 +16,10 @@
   text-anchor: middle;
 }
 
-.ribbons {
-  fill-opacity: 0.6;
-}
 </style>
 
 
-<div id="wheel" data-json-url="./relationships4.json">
-   <svg width="960" height="960"></svg>
-</div>
+<div id="wheel" data-json-url="./relationships4.json"></div>
 
 
 <script type="text/javascript">
@@ -35,6 +30,7 @@
    - radius change
    - labels 90°
    - add fade
+   - handle for scaling
 
     DOC : http://devdocs.io/d3~4
 
@@ -47,7 +43,6 @@ var rotate = 0;
 var div;
 var m0;
 var svg;
-var g;
 
 
 //----------------------------------------------------------------------------
@@ -60,6 +55,9 @@ var g;
 
 
 var jsonURL = d3.select("#wheel").attr("data-json-url");
+d3.json(jsonURL, build_wheel);
+
+
 
 function build_wheel(data) {
 
@@ -68,64 +66,46 @@ function build_wheel(data) {
     return;
   }
 
-
+  // dimensions
   var margin = {left:90, top:90, right:90, bottom:90},
-      outerSize = 500,
+      outerSize = 800,
     width =  outerSize - margin.left - margin.right, // more flexibility: Math.min(window.innerWidth, 1000)
     height =  outerSize - margin.top - margin.bottom, // same: Math.min(window.innerWidth, 1000)
     innerRadius = Math.min(width, height) * .39,
-    outerRadius = innerRadius * 1.1;
-
-  // create SVG
-  // svg = d3.select("#wheel").append("svg")
-  //   .attr("width", width + margin.left + margin.right)
-  //   .attr("height", height + margin.top + margin.bottom)
-  //   .append("g")
-  //   .attr("transform", "translate(" + (width/2 + margin.left) + "," + (height/2 + margin.top) + ")")
-  //   .datum(chord(matrix));
+    outerRadius = innerRadius * 1.1,
+    opacityDefault = 0.7;
 
 
-  // dimensionnement de la div
-  div = d3.select("#wheel")
-    .style("width", width + "px")
-    .style("margin", "0 auto");
-
-  // dimensionnement du canevas
-  svg = d3.select("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-
-
-  // initialisation du diagramme chord
+  // create scale and layout functions
+  var color = d3.scaleOrdinal(d3.schemeCategory20);
   var chord = d3.chord()
-    .padAngle(0.1)
+    .padAngle(0.03)
     .sortChords(d3.descending);
-
-  // définition des arcs 
   var arc = d3.arc()
     .innerRadius(innerRadius*1.01)
     .outerRadius(outerRadius);
-
-  // définition des "rubans"
   var ribbon = d3.ribbon()
     .radius(innerRadius);
 
-  //Initialize colors to an ordinal scheme
-  var color = d3.scaleOrdinal(d3.schemeCategory20);
-  // var color = d3.scaleOrdinal()
-  //   .domain(d3.range(4))
-  //   .range(["#000000", "#FFDD89", "#957244", "#F26223"]);
 
 
-  //What does this do?
-  g = svg.append("g")
+  // create SVG
+  div = d3.select("#wheel");
+  svg = div.append("svg")
+    .attr("width", width)
+    .attr("height", height);
+  var g = svg.append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
     .datum(chord(data.matrix));
+
 
   //Defines each "group" in the chord diagram
   var group = g.append("g")
     .attr("class", "groups")
+
+    .on("mouseover", fade(.1))
+    .on("mouseout", fade(opacityDefault))
+
     .selectAll("g")
     .data(function(chords) { return chords.groups; })
     .enter().append("g");
@@ -135,9 +115,7 @@ function build_wheel(data) {
   group.append("path")
     .style("fill", function(d) { return color(d.index); })
     .style("stroke", function(d) { return d3.rgb(color(d.index)).darker(); })
-    .attr("d", arc)
-    .on("mouseover", fade(.1))         /* Where attempt at mouseover is made */
-    .on("mouseout", fade(1));
+    .attr("d", arc);
 
 
   // ajout d'un titre pour chaque groupe
@@ -162,17 +140,6 @@ function build_wheel(data) {
       });
       
 
-  // STRATOPAN does it like this
-        // .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
-        // .append("svg:text")
-        // .attr("dx", function(d) { return d.x < 180 ? 8 : -8; })
-        // .attr("dy", ".31em")
-        // .attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
-        // .attr("transform", function(d) { return d.x < 180 ? null : "rotate(180)"; })
-        // .text(function(d) { return d.name; })
-
-
-
 
 //Draw the ribbons that go from group to group
   var ribbons =  g.append("g")
@@ -180,7 +147,9 @@ function build_wheel(data) {
     .selectAll("path")
     .data(function(chords) { return chords; })
     .enter().append("path")
+      .attr("class", "chord")
       .attr("d", ribbon)
+      .style("opacity", opacityDefault)
       .style("fill", function(d) { return color(d.target.index); })
       .style("stroke", function(d) { return d3.rgb(color(d.target.index)).darker(); });
 
@@ -192,31 +161,6 @@ function build_wheel(data) {
     });
 
 
-
-
-
-
-    // svg.selectAll("path.link")
-    //     .data(links)
-    //     .enter().append("svg:path")
-    //     .attr("class", function(d) { return "link source-" + d.source.key + " target-" + d.target.key; })
-    //     .attr("d", function(d, i) { return line(splines[i]); });
-
-    // svg.selectAll("g.node")
-    //     .data(nodes.filter(function(n) { return !n.children; }))
-    //     .enter().append("svg:g")
-    //     .attr("class", "node")
-    //     .attr("id", function(d) { return "node-" + d.key; })
-    //     .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
-    //     .append("svg:text")
-    //     .attr("dx", function(d) { return d.x < 180 ? 8 : -8; })
-    //     .attr("dy", ".31em")
-    //     .attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
-    //     .attr("transform", function(d) { return d.x < 180 ? null : "rotate(180)"; })
-    //     .text(function(d) { return d.name; })
-    //     .on("mouseover", function(d) { mouseover(d, svg); } )
-    //     .on("mouseout",  function(d) { mouseout(d, svg);  } );
-
     d3.select(window)
         .on("mousedown", function(d) { mousedown(svg, outerRadius); } )
         .on("mousemove", function(d) { mousemove(svg, outerRadius); } )
@@ -225,7 +169,6 @@ function build_wheel(data) {
 
 }
 
-d3.json(jsonURL, build_wheel);
 
 
 
@@ -302,11 +245,6 @@ function dot(a, b) {
 
 function mouse(e, rx, ry) {
 
-  //var m = d3.mouse(div._groups[0][0]);
-
-  // var m = d3.mouse(div.node());
-  // return [m[0] - rx, m[1] - ry];
-
   var containerRect =  div.node().getBoundingClientRect();
     var xOffset = containerRect.left + window.scrollX;
     var yOffset = containerRect.top  + window.scrollY;
@@ -325,5 +263,9 @@ function updateNodes(svg, name, value) {
             svg.select("#node-" + d[name].key).classed(name, value);
     };
 }
+
+
+
+
 
 </script>
