@@ -370,17 +370,17 @@ sub relationships4 {
     foreach my $column (@columns) {
 
       foreach my $path (@{$column->{paths} || []}) {
-
-        $DB::single = 1 if !$column->{name};
-        
         my $col = $ix_table{$path->{to_table}} or next;
         $matrix[$row][$col] = 1;
-
-        my $descr = "$table.$path->{name}: $column->{COLUMN_NAME} <=> "
-                  . "$path->{to_table}.$path->{foreign_key} \n";
-
-        $rel_descr[$row][$col] .= $descr;
-        $rel_descr[$col][$row] .= $descr unless $col == $row;
+        if (!$column->{is_pk}) {
+          my $join = "[FK] $table.$column->{COLUMN_NAME} = "
+                    . "$path->{to_table}.$path->{foreign_key} [PK]"
+                    . "\n=> $path->{name}";
+          substr($rel_descr[$row][$col], 0, 0, $join);
+        }
+        else {
+          $rel_descr[$col][$row] .= " / <= $path->{name}";
+        }
       }
     }
   }

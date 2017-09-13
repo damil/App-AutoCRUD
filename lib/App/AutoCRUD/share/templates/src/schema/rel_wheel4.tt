@@ -44,12 +44,11 @@
 /* 
 
    TODO
-   - labels 90°
    - handle for scaling or make responsive to window size
-   - table groups : sort tables differently, add arcs for tgroups
-   - labels : display join details (col names)
+   - table groups : add arcs for tgroups
    - click on table : display full list of columns + hyperlink on search form
-   - min size for tables without re
+   - min size for tables without chords
+   - after rotate, compute text direction 
 
     DOC : http://devdocs.io/d3~4
 
@@ -86,7 +85,7 @@ function build_wheel(data) {
   }
 
   // dimensions
-  var margin = {left:90, top:90, right:90, bottom:90},
+  var margin = {left:150, top:150, right:150, bottom:150},
       outerSize = 800,
       width =  outerSize - margin.left - margin.right,
         // more flexibility: Math.min(window.innerWidth, 1000)
@@ -164,22 +163,20 @@ function build_wheel(data) {
     return data.nodes[d.index]; // nom de la table 
     });
 
-
-  // append label names on the outside
-  outerArcs.append("text")
-      .attr("dy", ".35em") //width
-      .attr("class", "grp-label")
-      .attr("transform", function(d,i) { //angle
-        d.angle = (d.startAngle + d.endAngle) / 2; //calculate the average of the start angle and the end angle
-        d.name = data.nodes[i]; 
-        return "rotate(" + (d.angle * 180 / Math.PI) + ")" +
-          "translate(0," + -1.1 * (outerRadius + 10) + ")" +
-          ((d.angle > Math.PI * 3 / 4 && d.angle < Math.PI * 5 / 4) ? "rotate(180)" : "");
-      }) //to spin when the angle between 135 to 225 degrees
-      .text(function(d) {
-        return d.name;
-      });
       
+  outerArcs.append("text")
+    .each(function(d) { d.angle = (d.startAngle + d.endAngle) / 2; })
+    .attr("dy", ".35em")
+    .attr("class", "titles")
+    .attr("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+    .attr("transform", function(d) {
+      return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+      + "translate(" + (outerRadius + 10) + ")"
+      + (d.angle > Math.PI ? "rotate(180)" : "");
+    })
+    .text(function(d,i) { return data.nodes[i]; });
+
+
 
 
   //Draw the ribbons that go from group to group
