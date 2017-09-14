@@ -41,34 +41,13 @@ sub tablegroups {
 }
 
 
-sub relationships {
+sub wheel { # build a diagram of the schema as a wheel of tables with ribbons
   my ($self) = @_;
 
   my $context = $self->context;
-  return $context->datasource->relationships;
-}
+  $context->set_template("schema/wheel.tt");
 
-sub rel_wheel {
-  my ($self) = @_;
-
-  my $context = $self->context;
-  $context->set_template("schema/rel_wheel.tt");
-}
-
-sub rel_wheel4 {
-  my ($self) = @_;
-
-  my $context = $self->context;
-  $context->set_template("schema/rel_wheel4.tt");
-
-  return $context->datasource->relationships4;
-}
-
-sub relationships4 {
-  my ($self) = @_;
-
-  my $context = $self->context;
-  return $context->datasource->relationships4;
+  return $context->datasource->wheel_data;
 }
 
 

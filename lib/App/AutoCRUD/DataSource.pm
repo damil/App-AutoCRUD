@@ -319,43 +319,14 @@ sub _meta_table {
 
 
 
-sub tables_for_relationships {
+sub wheel_data {
   my ($self) = @_;
 
   my @tables = grep { eval {$self->schema->metadm->db_table($_)}} # tmp hack
-               grep {!/^(WL|CL)/}
+               grep {!/^(WL|CL)/}                                 # GE:J hack
                grep {!/^sqlite/}
                map {$_->{TABLE_NAME}}
                map {@{$_->{tables}}} @{$self->tablegroups};
-
-  return @tables;
-}
-
-sub relationships {
-  my ($self) = @_;
-
-  my @tables = $self->tables_for_relationships;
-
-  my %relationships;
-  foreach my $table (@tables) {
-    my @columns = map {@{$_->{columns}}} @{$self->colgroups($table)};
-    #    foreach my $column (grep {$_->{is_pk}}@columns) {
-    foreach my $column (@columns) {
-      foreach my $path (@{$column->{paths} || []}) {
-        push @{$relationships{$table}}, $path->{to_table};
-      }
-    }
-  }
-  
-  return [map { {name => $_, prereqs => $relationships{$_}} }
-              sort keys %relationships];
-}
-
-
-sub relationships4 {
-  my ($self) = @_;
-
-  my @tables = $self->tables_for_relationships;
 
   my $n_tables = @tables;
   my @matrix     = map { [ (0)  x $n_tables ] } 1..$n_tables;
@@ -385,7 +356,11 @@ sub relationships4 {
     }
   }
 
-  return { matrix => \@matrix, nodes => \@tables, rel_descr => \@rel_descr};
+  return {
+    matrix    => \@matrix,
+    nodes     => \@tables,
+    rel_descr => \@rel_descr,
+  };
 }
 
 

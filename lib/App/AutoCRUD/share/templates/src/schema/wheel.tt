@@ -36,7 +36,7 @@
 </style>
 
 
-<div id="wheel" data-json-url="./relationships4.json"></div>
+<div id="wheel" data-json-url="./wheel.json"></div>
 
 
 <script type="text/javascript">
@@ -51,6 +51,9 @@
    - after rotate, compute text direction 
 
     DOC : http://devdocs.io/d3~4
+
+   inspired by "Schema Ball" http://mkweb.bcgsc.ca/schemaball/
+
 
 
 */
@@ -85,8 +88,8 @@ function build_wheel(data) {
   }
 
   // dimensions
-  var margin = {left:150, top:150, right:150, bottom:150},
-      outerSize = 800,
+  var margin = {left:10, top:10, right:10, bottom:10},
+      outerSize = 700,
       width =  outerSize - margin.left - margin.right,
         // more flexibility: Math.min(window.innerWidth, 1000)
       height =  outerSize - margin.top - margin.bottom,
@@ -140,8 +143,6 @@ function build_wheel(data) {
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
     .datum(chord(data.matrix));
 
-
-
   // draw outer arcs
   var outerArcs = g.selectAll("g.group")
     .data(function(chords) { return chords.groups; })
@@ -149,6 +150,7 @@ function build_wheel(data) {
     .attr("class", "group")
     .on("mouseover", fade(svg, .1))
     .on("mouseout", fade(svg, opacityDefault))
+    .on("click", function(d, i) {window.open("../table/"+data.nodes[d.index]+"/descr");})
     ;
 
 
