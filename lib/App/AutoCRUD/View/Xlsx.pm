@@ -70,7 +70,7 @@ sub render {
   my $rows    = $data->{rows};
   my $n_rows  = @$rows;
   my $n_cols  = @headers;
-  $worksheet->add_table(3, 0, $n_rows + 2, $n_cols-1, {
+  $worksheet->add_table(3, 0, $n_rows + 3, $n_cols-1, {
     data       => [ map {[@{$_}{@headers}]} @$rows ],
     columns    => [ map { {header => $_}} @headers ],
     autofilter => 1,

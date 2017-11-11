@@ -80,21 +80,23 @@
   <br>
   <a href="descr">describe</a> this table
 
-  [% IF data.rows.size > 0 %]
-      <br>
-      check/uncheck all records in page
-        <input type=checkbox onchange="propagate_checkbox(this)"> 
-      <br>
-      <a href="update?_noupd=[% pk_name | uri %]&" 
-         onclick="return add_checkboxes(this)">update</a> |
-      <a href="delete?" 
-         onclick="return add_checkboxes(this)">delete</a> checked records
-      <br>
-      <a href="update?_noupd=[% pk_name | uri %]&[% data.where_args | utf8_url %]">update</a> |
-      <a href="delete?[% data.where_args | utf8_url %]">delete</a> whole result set
-  [% END; # IF data.rows.size > 0 %]
-  <br>
-  <a href="insert">insert</a> a new record
+  [% UNLESS c.app.readonly %]
+    [% IF data.rows.size > 0 %]
+        <br>
+        check/uncheck all records in page
+          <input type=checkbox onchange="propagate_checkbox(this)"> 
+        <br>
+        <a href="update?_noupd=[% pk_name | uri %]&" 
+           onclick="return add_checkboxes(this)">update</a> |
+        <a href="delete?" 
+           onclick="return add_checkboxes(this)">delete</a> checked records
+        <br>
+        <a href="update?_noupd=[% pk_name | uri %]&[% data.where_args | utf8_url %]">update</a> |
+        <a href="delete?[% data.where_args | utf8_url %]">delete</a> whole result set
+    [% END; # IF data.rows.size > 0 %]
+    <br>
+    <a href="insert">insert</a> a new record
+  [% END %]
 </div>
 
 <h1>List [% data.table %]</h1>
@@ -119,7 +121,7 @@
 
 [% IF data.rows.size > 0 %]
 
-  <form id="list_form" method="GET" action="update">
+  [% WRAPPER form_unless_readonly; %]
 
     <div id="TN_tree" onPing="followLink">
       [% FOREACH row IN data.rows;
@@ -128,8 +130,10 @@
              pk_vals.push(row.$field);
            END;
            SET pk = pk_vals.join("/"); %]
-        <input name="[% pk_name %]" value="[% pk %]"
-               type="checkbox" class="check_record" title="mark for update/delete">
+        [% UNLESS c.app.readonly %]   
+          <input name="[% pk_name %]" value="[% pk %]"
+                 type="checkbox" class="check_record" title="mark for update/delete">
+        [% END %]
         <span class="record_num">#[% record_num = data.offset + loop.count - 1;
                                      record_num %]</span>
         <div class="TN_node record">
@@ -143,10 +147,22 @@
       [% END; # FOREACH row IN data.rows %]
     </div>
 
-  </form>
+  [% END; # WRAPPER form_unless_readonly; %]
 
   <div class="actions">
     [% INCLUDE page_links %]
   </div>
 
 [% END; # IF data.rows.size > 0 %]
+
+
+[% BLOCK form_unless_readonly;
+     IF c.app.readonly;
+       content;
+     ELSE;
+       "<form id='list_form' method='GET' action='update'>\n";
+       content;
+       "</form>\n";
+     END; # IF
+   END; # BLOCK %]
+  

@@ -155,17 +155,35 @@ sub _tablegroups {
   # grouping: merge with table info from config
   my $tablegroups = clone $self->config('tablegroups') || [];
   foreach my $group (@$tablegroups) {
-    $group->{tables} 
-      = [ grep {$_} map {delete $tables->{$_}} @{$group->{tables}} ];
+    # tables declared in this group are removed from the global %$tables ..
+    my @declared_table_names = @{$group->{tables}};
+    my @extracted_tables     = map {delete $tables->{$_}} @declared_table_names;
+
+    # .. and their full definitions take place of the declared names
+    $group->{tables} = [ grep {$_} @extracted_tables ];
   }
 
   # deal with remaining tables (
-  my @other_tables = grep {!$self->is_technical_table($_)} sort keys %$tables;
-  push @$tablegroups, {
-    name   => 'Unclassified tables', 
-    descr  => 'Present in database but unlisted in config',
-    tables => [ @{$tables}{@other_tables} ],
-  } if @other_tables;
+  if (my @other_tables = grep {!$self->is_technical_table($_)}
+                              sort keys %$tables) {
+
+    # Filter out based on the regexps in filters include & exclude
+    if (my $filter_include = $self->config(qw/filters include/)) {
+      @other_tables = grep { $_ =~ /$filter_include/ } @other_tables;
+    }
+    if (my $filter_exclude = $self->config(qw/filters exclude/)) {
+      @other_tables = grep { $_ !~ /$filter_exclude/ } @other_tables;
+    }
+
+    # if some unclassified tables remain after the filtering
+    if (@other_tables) {
+      push @$tablegroups, {
+        name   => 'Unclassified tables', 
+        descr  => 'Present in database but unlisted in config',
+        tables => [ @{$tables}{@other_tables} ],
+      };
+    }
+  }
 
   return $tablegroups;
 }
@@ -186,6 +204,7 @@ sub _config {
 
     # copy structure into datasource config
     $config->{$_} = $struct_config->{$_} foreach keys %$struct_config;
+        
   }
 
   return $config;

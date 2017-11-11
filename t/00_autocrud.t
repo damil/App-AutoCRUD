@@ -32,7 +32,12 @@ my $config = {
          },
   datasources => {
     Chinook => {
-      dbh => {connect => $in_memory_dbh_copy},
+      dbh     => {connect => $in_memory_dbh_copy},
+      filters => {
+        include => '^[^iI]', # for test -- include all tables except those
+                             # that start with 'i' or 'I'
+        exclude => 'mer$',   # for test -- exclude tables that end in 'mer'
+       }
      },
    },
 };
@@ -57,9 +62,11 @@ test_psgi $app, sub {
 
   # schema page
   $res = $cb->(GET "/Chinook/schema/tablegroups");
-  like $res->content, qr/Artist/,                    "Artist listed";
-  like $res->content, qr/Album/,                     "Album listed";
-  like $res->content, qr/Track/,                     "Track listed";
+  like   $res->content, qr/Artist/,       "Artist listed";
+  like   $res->content, qr/Album/,        "Album listed";
+  like   $res->content, qr/Track/,        "Track listed";
+  unlike $res->content, qr/Invoice/i,     "no table starts with 'i'";
+  unlike $res->content, qr/Customer/i,    "exclude table ending in 'mer'";
 
   # table description
   $res = $cb->(GET "/Chinook/table/MediaType/descr");

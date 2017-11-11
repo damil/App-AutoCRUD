@@ -8,9 +8,10 @@ use Data::Domain 1.05 qw/:all/;
 sub Config {
   Struct(
      app => Struct(
-       name    => String(-optional => 1),
-       title   => String(-optional => 1),
-       default => Struct(-optional => 1),
+       name     => String(-optional => 1),
+       title    => String(-optional => 1),
+       default  => Struct(-optional => 1),
+       readonly => Whatever, # used as boolean
       ),
      datasources => Struct(
        -values => List(-min_size => 1,
@@ -38,6 +39,9 @@ sub DataSource {
     schema_class => String(-optional => 1),
     tablegroups  => List(-all => Tablegroup(), -optional => 1),
     tables       => Struct(-values => List(-all => Table()), -optional => 1),
+    filters      => Struct(-optional => 1,
+                           -fields => [include => String(-optional => 1),
+                                       exclude => String(-optional => 1)]),
    );
 }
 
@@ -149,6 +153,7 @@ to check if the configuration is correct.
   <app> : {
     name        => <string>,
     title       => <string>,
+    readonly    => <whatever>, # used as boolean
     default     => <hashref>,
   }
 
@@ -181,6 +186,12 @@ Short name (will be displayed in most pages).
 =item title
 
 Long name (will be displayed in home page).
+
+=item readonly
+
+Boolean flag; if true, data mutation operations will be forbidden
+(i.e. no insert, update or delete).
+
 
 =item default
 
@@ -287,11 +298,28 @@ information and are not immediately useful to the user.
 
 The ordered list of tables within this group.
 
+=item filters
+
+Allows to hide some tables by using regexes, this only hides tables which are NOT
+explicitely defined in the configuration.
+
+They are hidden from display, but there is absolutely no acces restriction
+(access is still possible by using the right URL).
+
+=over
+
+=item include
+
+This is evaluated as a regex and only shows tables who have matching names.
+
+=item exclude 
+
+This is evaluated as a regex and hides tables who have matching names.
+
+Exclude takes precedence over include.
 
 =back
 
-
-=back
 
 
 
