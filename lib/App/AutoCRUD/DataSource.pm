@@ -1,9 +1,7 @@
 package App::AutoCRUD::DataSource;
 
-use strict;
-use warnings;
-
 use Moose;
+use Moose::Util     qw/apply_all_roles/;
 use Carp;
 use DBI;
 use Clone           qw/clone/;
@@ -11,6 +9,7 @@ use List::MoreUtils qw/part/;
 use Scalar::Does    qw/does/;
 use Data::Reach     qw/reach/;
 use SQL::Abstract::FromQuery 0.10;
+
 
 use namespace::clean -except => 'meta';
 
@@ -32,7 +31,6 @@ has 'tablegroups'  => (is => 'ro', isa => 'ArrayRef',
 # indirectly generated through the _schema builder method
 has 'generated_schema' => (is => 'ro', isa => 'Str', init_arg => undef);
 has 'loaded_class'     => (is => 'ro', isa => 'Str', init_arg => undef);
-
 
 
 #======================================================================
@@ -74,6 +72,15 @@ sub _dbh {
   # report failure if no connection found
   $dbh
     or die "no DBI/connect information in config for " . $self->name;
+
+
+  # does this database have a Moose role ?
+  my $driver_name = $dbh->{Driver}{Name};
+  my $class_name  = "DataSource::" . ucfirst($driver_name);
+  my $driver_role = $self->app->find_class($class_name);
+
+  # if so, apply the role
+  apply_all_roles($self, $driver_role) if $driver_role;
 
   return $dbh;
 }
@@ -153,13 +160,12 @@ sub _tablegroups {
   }
 
   # deal with remaining tables (
-  if (my @other_tables = sort keys %$tables) {
-    push @$tablegroups, {
-      name   => 'Unclassified tables', 
-      descr  => 'Present in database but unlisted in config',
-      tables => [ @{$tables}{@other_tables} ],
-    };
-  }
+  my @other_tables = grep {!$self->is_technical_table($_)} sort keys %$tables;
+  push @$tablegroups, {
+    name   => 'Unclassified tables', 
+    descr  => 'Present in database but unlisted in config',
+    tables => [ @{$tables}{@other_tables} ],
+  } if @other_tables;
 
   return $tablegroups;
 }
@@ -219,6 +225,20 @@ sub primary_key {
 }
 
 
+sub columns_from_db {
+  my ($self, $table) = @_;
+
+  # get column info from database
+  my $db_catalog = $self->config(qw/dbh db_catalog/);
+  my $db_schema  = $self->config(qw/dbh db_schema/);
+  my $sth        = $self->dbh->column_info($db_catalog, $db_schema,
+                                           $table, undef);
+  my $columns    = $sth->fetchall_hashref('COLUMN_NAME');
+
+  return $columns;
+}
+
+
 sub colgroups {
   my ($self, $table) = @_;
 
@@ -230,21 +250,11 @@ sub colgroups {
   my $meta_table = $self->_meta_table($table);
   my %paths      = $meta_table->path;
 
-  # primary_key
-  my @pk = $meta_table->primary_key;
-
-  # get column info from database
-  my $db_catalog = $self->config(qw/dbh db_catalog/);
-  my $db_schema  = $self->config(qw/dbh db_schema/);
-  my $sth        = $self->dbh->column_info($db_catalog, $db_schema,
-                                           $table, undef);
-  my $columns    = $sth->fetchall_hashref('COLUMN_NAME');
-
-  # TMP HACK, Oracle-specific. Q: How to design a good abstraction for this ?
-  $columns = $self->_columns_from_Oracle_synonym($db_schema, $table)
-    if ! keys %$columns and $self->dbh->{Driver}{Name} eq 'Oracle';
+  # columns
+  my $columns = $self->columns_from_db($table);
 
   # mark primary keys
+  my @pk = $meta_table->primary_key;
   $columns->{$_}{is_pk} = 1 foreach @pk;
 
   # attach paths to relevant columns
@@ -294,20 +304,6 @@ sub colgroups {
 
 
 
-sub _columns_from_Oracle_synonym {
-  my ($self, $db_schema, $syn_name) = @_;
-
-  my $dbh = $self->dbh;
-  my $sql = "SELECT TABLE_OWNER, TABLE_NAME FROM ALL_SYNONYMS "
-          . "WHERE OWNER=? AND SYNONYM_NAME=?";
-  my ($owner, $table) = $dbh->selectrow_array($sql, {}, $db_schema, $syn_name)
-    or return {};
-
-  my $sth = $dbh->column_info(undef, $owner, $table, undef);
-  return $sth->fetchall_hashref('COLUMN_NAME')
-}
-
-
 
 sub _meta_table {
   my ($self, $table) = @_;
@@ -319,49 +315,97 @@ sub _meta_table {
 
 
 
+sub is_technical_table {} # to be overridden in driver roles
+
+
 sub wheel_data {
   my ($self) = @_;
 
-  my @tables = grep { eval {$self->schema->metadm->db_table($_)}} # tmp hack
-               grep {!/^(WL|CL)/}                                 # GE:J hack
-               grep {!/^sqlite/}
-               map {$_->{TABLE_NAME}}
-               map {@{$_->{tables}}} @{$self->tablegroups};
+  # names of tables relevant to be displayed
+  my @tables;
+  my @tablegroups;
+ GRP:
+  foreach my $grp (@{$self->tablegroups}){
+    my @tables_in_grp            # TODO : filtering criteria should be in config
+      = grep { eval {$self->schema->metadm->db_table($_)}} # tmp hack
+        grep {!/^(WL|CL)/}                                 # GE:J hack
+        grep {!$self->is_technical_table($_)}
+        map {$_->{TABLE_NAME}}
+             @{$grp->{tables}}
+      or next GRP;
 
+    push @tablegroups, {
+      name => $grp->{name},
+      start_table => $#tables + 1,
+      end_table   => $#tables + @tables_in_grp,
+     };
+    push @tables, @tables_in_grp;
+  }
+
+  # initial datastructures for matrix of relationships
   my $n_tables = @tables;
   my @matrix     = map { [ (0)  x $n_tables ] } 1..$n_tables;
   my @rel_descr  = map { [ ("") x $n_tables ] } 1..$n_tables;
-
   my $ix = 0;
-  my %ix_table = map {($_ => $ix++)} @tables;
+  #  my %ix_table = map {($_ => $ix++)} @tables;
+  my %ix_table = map {($tables[$_] => $_)} 0..$n_tables-1;
 
+  # build matrices
   foreach my $table (@tables) {
     my $row = $ix_table{$table} or next;
     my @columns = map {@{$_->{columns}}} @{$self->colgroups($table)};
     foreach my $column (@columns) {
-
       foreach my $path (@{$column->{paths} || []}) {
         my $col = $ix_table{$path->{to_table}} or next;
+
+        # for d3.js, a relationship is expressed as a number
         $matrix[$row][$col] = 1;
+
+        # for tooltips on ribbons, also build a matrix of textual descriptions
         if (!$column->{is_pk}) {
           my $join = "[FK] $table.$column->{COLUMN_NAME} = "
                     . "$path->{to_table}.$path->{foreign_key} [PK]"
-                    . "\n=> $path->{name}";
+                    . "\n$path->{name}";
           substr($rel_descr[$row][$col], 0, 0, $join);
         }
         else {
-          $rel_descr[$col][$row] .= " / <= $path->{name}";
+          $rel_descr[$col][$row] .= " <=> $path->{name}";
         }
       }
     }
   }
 
   return {
-    matrix    => \@matrix,
-    nodes     => \@tables,
-    rel_descr => \@rel_descr,
+    matrix      => \@matrix,
+    nodes       => \@tables,
+    tablegroups => \@tablegroups,
+    rel_descr   => \@rel_descr,
   };
 }
+
+
+sub full_doc {
+  my ($self) = @_;
+
+  my $tablegroups = clone $self->tablegroups;
+
+ GRP:
+  foreach my $grp (@$tablegroups){
+    $grp->{tables}
+      = [ grep { eval {$self->schema->metadm->db_table($_->{TABLE_NAME})}} # tmp hack
+          grep {!$self->is_technical_table($_->{TABLE_NAME})}
+               @{$grp->{tables}} ];
+    foreach my $table (@{$grp->{tables}}) {
+      $table->{colgroups} = $self->colgroups($table->{TABLE_NAME});
+    }
+  }
+
+  return {name        => $self->name,
+          tablegroups => $tablegroups,
+          d_extract   => scalar(localtime),
+        };
+}
+
 
 
 

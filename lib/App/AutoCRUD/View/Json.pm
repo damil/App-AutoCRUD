@@ -10,7 +10,9 @@ use namespace::clean -except => 'meta';
 has 'json_args' => ( is => 'bare', isa => 'HashRef',
                      default => sub {{ pretty          => 1,
                                        allow_blessed   => 1,
-                                       convert_blessed => 1 }} );
+                                       convert_blessed => 1,
+                                       utf8            => 1,
+                                       }} );
 
 
 sub render {

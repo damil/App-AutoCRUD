@@ -1,3 +1,5 @@
+[%# -*- mode: javascript -*-    # tells Emacs which mode to use for this file %]
+
 [%~ WRAPPER linked_style %][% base %]static/css/ashbury-d3.css[% END ~%]
 [%~ WRAPPER linked_script %][% base %]static/js/d3.js[% END ~%]
 
@@ -46,9 +48,12 @@
    TODO
    - handle for scaling or make responsive to window size
    - table groups : add arcs for tgroups
-   - click on table : display full list of columns + hyperlink on search form
    - min size for tables without chords
-   - after rotate, compute text direction 
+   - after rotate, recompute text direction 
+   - ribbon ends showing direction of relationship
+   - tablegroups, adjust text (upside down)
+
+
 
     DOC : http://devdocs.io/d3~4
 
@@ -94,22 +99,33 @@ function build_wheel(data) {
         // more flexibility: Math.min(window.innerWidth, 1000)
       height =  outerSize - margin.top - margin.bottom,
         // same: Math.min(window.innerWidth, 1000)
-      innerRadius = Math.min(width, height) * .39,
+      tablegroupInnerRadius = Math.min(width, height) * .39,
+      tablegroupOuterRadius = tablegroupInnerRadius+10,
+      innerRadius = tablegroupOuterRadius * 1.01,
       outerRadius = innerRadius * 1.1,
       opacityDefault = 0.7;
 
-
   // create scale and layout functions
   var color = d3.scaleOrdinal(d3.schemeCategory20);
+     // TODO : see d3-scale-chromatic for more colors
+
   var chord = d3.chord()
-    .padAngle(0.03)
-  //    .sortChords(d3.descending)
-  ;
-  var arc = d3.arc()
+    .padAngle(0.03)  ;
+  var table_arc = d3.arc()
     .innerRadius(innerRadius*1.01)
     .outerRadius(outerRadius);
   var ribbon = d3.ribbon()
-    .radius(innerRadius);
+    .radius(tablegroupInnerRadius * 0.98);
+  var tgr_arc = d3.arc()
+    .innerRadius(tablegroupInnerRadius)
+    .outerRadius(tablegroupOuterRadius)
+    .startAngle(function(d,i){
+      return chords.groups[d.start_table].startAngle;
+    })
+    .endAngle(function(d,i){
+      return chords.groups[d.end_table].endAngle;
+    })
+    ;
 
 
 
@@ -138,34 +154,34 @@ function build_wheel(data) {
    // //class to make it responsive
    // .classed("svg-content-responsive", true); 
 
-
+  var chords = chord(data.matrix);
   var g = svg.append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-    .datum(chord(data.matrix));
+    .datum(chords);
 
   // draw outer arcs
   var outerArcs = g.selectAll("g.group")
     .data(function(chords) { return chords.groups; })
-    .enter().append("g")
-    .attr("class", "group")
-    .on("mouseover", fade(svg, .1))
-    .on("mouseout", fade(svg, opacityDefault))
-    .on("click", function(d, i) {window.open("../table/"+data.nodes[d.index]+"/descr");})
+    .enter()
+      .append("a")
+        .attr("href", function(d, i) {return "../table/"+data.nodes[d.index]+"/descr";})
+        .attr("target", "[% c.datasource.name %]_table_descr")
+      .append("g")
+        .attr("class", "group")
+        .on("mouseover", fade(svg, .1))
+        .on("mouseout", fade(svg, opacityDefault))
     ;
-
 
   outerArcs.append("path")
     .style("fill", function(d) { return color(d.index); })
     .style("stroke", function(d) { return d3.rgb(color(d.index)).darker(); })
-    .attr("d", arc);
-
+    .attr("d", table_arc);
 
   // title attribute
-  outerArcs.append("title").text(function(d) {
-    return data.nodes[d.index]; // nom de la table 
-    });
+  // outerArcs.append("title").text(function(d) {
+  //   return data.nodes[d.index]; // nom de la table 
+  //   });
 
-      
   outerArcs.append("text")
     .each(function(d) { d.angle = (d.startAngle + d.endAngle) / 2; })
     .attr("dy", ".35em")
@@ -177,6 +193,33 @@ function build_wheel(data) {
       + (d.angle > Math.PI ? "rotate(180)" : "");
     })
     .text(function(d,i) { return data.nodes[i]; });
+
+  // tablegroups
+  var tgr = g.selectAll("g.tablegroup")
+    .data(data.tablegroups)
+    .enter().append("g")
+      .attr("class", "tablegroup");
+      tgr.append("title").text(function(d,i) {
+      return d.name;
+    });
+
+  tgr.append("path")
+    .attr("id", function(d, i) { return "tablegroup" + i; })
+    .style("fill", "beige")
+    .style("stroke", "black")
+    .attr("d", tgr_arc);
+
+  tgr.append("text")
+   .attr("dx",  6)
+   .attr("dy", 10)
+   .append("textPath")
+   .attr("href", function(d, i) { return "#tablegroup" + i; })
+   .text(function(d, i) { return d.name; })
+  ;
+
+// Remove the labels that don't fit. :(
+// groupText.filter(function(d, i) { return groupPath[0][i].getTotalLength() / 2 - 16 < this.getComputedTextLength(); })
+// .remove();
 
 
 
@@ -197,15 +240,14 @@ function build_wheel(data) {
   // tooltip pour chaque ruban
   ribbons.append("title").
     text(function(d){
-//      return data.nodes[d.source.index] + " => " + data.nodes[d.target.index];
       return data.rel_descr[d.source.index][d.target.index] || "no descr";
     });
 
 
     d3.select(window)
-        .on("mousedown", function(d) { mousedown(svg, outerRadius); } )
-        .on("mousemove", function(d) { mousemove(svg, outerRadius); } )
-        .on("mouseup",   function(d) { mouseup(svg, outerRadius); } );
+        .on("mousedown", function(d) { init_rotation(svg, outerRadius); } )
+        .on("mousemove", function(d) { during_rotation(svg, outerRadius); } )
+        .on("mouseup",   function(d) { end_rotation(svg, outerRadius); } );
 
 
 }
@@ -229,7 +271,7 @@ function fade(svg, opacity) {
 
 //----------------------------------------------------------------------------
 
-function mousedown(svg, r) {
+function init_rotation(svg, r) {
 
     m0 = mouse(d3.event, r, r);
     d3.event.preventDefault();
@@ -237,7 +279,7 @@ function mousedown(svg, r) {
 
 //----------------------------------------------------------------------------
 
-function mousemove(svg, r) {
+function during_rotation(svg, r) {
 
     if (! m0) return;
 
@@ -254,7 +296,7 @@ function mousemove(svg, r) {
 
 //----------------------------------------------------------------------------
 
-function mouseup(svg, rx, ry) {
+function end_rotation(svg, rx, ry) {
 
     m0 = null;
 
@@ -317,7 +359,11 @@ var svg = d3.select("body")
  }))
  .append("g")
 
+
+
+
 */
+
 
 
 

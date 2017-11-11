@@ -30,7 +30,11 @@
 
 [%# ---------- start body ---------- %]
 
-<a href="perl_code" class="link_descr">Perl source code</a>
+<a href="perl_code"    class="link_descr">Perl source code</a><br>
+<a href="wheel"        class="link_descr">Wheel of relationships</a><br>
+<a href="full_doc.doc" class="link_descr">Full documentation in MsWord</a>
+
+
 <h1>List of tables</h1>
 
 <div id="TN_tree" onPing="followLink">

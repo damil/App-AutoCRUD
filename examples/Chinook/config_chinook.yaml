@@ -49,13 +49,6 @@ datasources :
           - MediaType
           - Genre
 
-      - name: Technical
-        descr: Internal sqlite information
-        node: closed
-        tables :
-          - sqlite_sequence
-
-
     tables:
       Track:
         colgroups:

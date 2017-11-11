@@ -51,6 +51,17 @@ sub wheel { # build a diagram of the schema as a wheel of tables with ribbons
 }
 
 
+sub full_doc { 
+  my ($self) = @_;
+
+  my $context = $self->context;
+  $context->set_template("schema/full_doc.tt");
+
+  return $context->datasource->full_doc;
+}
+
+
+
 sub perl_code {
   my ($self) = @_;
 
