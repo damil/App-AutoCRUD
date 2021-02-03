@@ -860,6 +860,7 @@ L<https://github.com/damil/App-AutoCRUD>.
 =head1 SEE ALSO
 
 L<Catalyst::Plugin::AutoCRUD>,
+L<WebAPI::DBIC>,
 L<Plack>,
 L<http://www.codeplex.com/ChinookDatabase>.
 
