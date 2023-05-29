@@ -1,5 +1,7 @@
 Revision history for Plack-App-AutoCRUD
 
+  - fixed inaccuracies in pod doc for App::AutoCRUD::ConfigDomain
+
 0.14 03.02.2021
   - pod documentation updated
   - fixed failing pod test
